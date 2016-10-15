@@ -1,3 +1,8 @@
+
+/* ==========================================================================
+	GENERAL DEFINITIONS
+   ========================================================================== */
+
 html {
 	box-sizing: border-box;
 	font-size: 100%;
@@ -7,11 +12,17 @@ html, body  {
 	margin: 0px;
 	padding: 0px;
 	height: 100%;
+    background: #EDEEF0;
+    font-family: 'PT Sans', sans-serif;
 }
 
 *, *:before, *:after {
 	box-sizing: inherit;
 }
+
+
+
+/*============================== solves the floating element clear problem ==============================*/
 
 .clearfix:after {
 	clear: both;
@@ -25,4 +36,244 @@ html, body  {
 
 .clearfix {
 	zoom: 1;
+}
+
+
+
+/* ==========================================================================
+	LOGIN Panel
+   ========================================================================== */
+
+#login {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    min-width: 100%;
+    position: fixed;
+    background: white;
+}
+
+
+
+/* ==========================================================================
+	CHAT Panel
+   ========================================================================== */
+
+#chat-wrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    min-width: 100%;
+}
+
+#chat-wrapper #messages {
+    height: 92.5%;
+    padding: 15px;
+    overflow-y: auto;
+    margin: 0;
+}
+
+#messages li {
+    list-style: none;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    width: 100%;
+    display: inline-block;
+}
+
+#messages li:first-child {
+    margin-top: 0;
+}
+
+#messages li:last-child {
+    margin-bottom: 0;
+}
+
+#messages .message {
+    position: relative;
+    margin-left: 15px;
+    margin-right: 15px;
+    padding: 15px;
+    zoom: 1;
+    color: #FFFFFF;
+    vertical-align: top;
+    max-width: 75%;
+    display: inline-block;
+    background: #507299;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top-right-radius: 5px;
+    box-shadow: 0 2px 0px #374f6b;
+}
+
+#messages .message:before {
+    content: '';
+    position: absolute;
+    width: 0;
+	height: 0;
+	left: -9px;
+    top: 10px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: #507299 #507299 transparent transparent;
+}
+
+#messages .timestamp {
+    font-size: 0.75em;
+    margin-top: 10px;
+}
+
+
+/*============================== OWN MESSAGE ==============================*/
+
+.message-wrapper.own .username {
+    float: right;
+}
+
+.message-wrapper.own .timestamp {
+    text-align: right;
+}
+
+.message-wrapper.own .message {
+    float: right;
+    border-top-right-radius: 0px !important;
+    border-top-left-radius: 5px;
+    background: #3DA3A2 !important;
+    box-shadow: 0 2px 0px #267573 !important;
+}
+
+.message-wrapper.own .message:before {
+	right: -9px !important;
+    left: auto !important;
+	border-color: #3DA3A2 transparent transparent #3DA3A2 !important;
+}
+
+
+/*============================== USER JOINS/LEFT CHAT ==============================*/
+
+.joined,
+.left {
+    line-height: 0em;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    font-style: italic;
+    color: #c0c0c0;
+    border-bottom: 1px solid #c0c0c0;
+    text-shadow: 7px 0px 0px #EDEEF0, 
+        6px 0px 0px #EDEEF0, 
+        5px 0px 0px #EDEEF0, 
+        4px 0px 0px #EDEEF0, 3px 0px 0px #EDEEF0, 2px 0px 0px #EDEEF0, 1px 0px 0px #EDEEF0, 1px 0px 0px #EDEEF0, 0px 0px 0px #EDEEF0, -1px 0px 0px #EDEEF0, -2px 0px 0px #EDEEF0, -3px 0px 0px #EDEEF0, -4px 0px 0px #EDEEF0, -5px 0px 0px #EDEEF0, -6px 0px 0px #EDEEF0, -7px 0px 0px #EDEEF0;
+}
+
+.left {
+    text-align: right;
+}
+
+.joined span,
+.left span {
+    font-style: normal;
+}
+
+.joined span {
+    float: right;
+}
+
+.left span {
+    float: left;
+}
+
+
+
+/* ==========================================================================
+	FOOTER -> Chat messages, etc.
+   ========================================================================== */
+
+footer {
+    height: 7.5%;
+    background: #FFFFFF;
+}
+
+footer form {
+    display: inline-block;
+    height: 100%;
+    width: 100%;
+}
+
+footer form input[type='text'] {
+    height: 100%;
+    width: 90%;
+    border: 0px;
+    padding: 15px;
+    font-family: 'PT Sans', sans-serif;
+    color: #c0c0c0;
+    font-size: 1.25em;
+    
+    -webkit-transition: all 0.1s ease-out;
+    -moz-transition: all 0.1s ease-out;
+    -ms-transition: all 0.1s ease-out;
+    -o-transition: all 0.1s ease-out;
+    transition: all 0.1s ease-out;
+}
+
+footer form input[type='text']:focus,
+footer form input[type='text']:focus {
+    color: #4B515B;
+}
+
+footer form button {
+    position: relative;
+    font-family: 'PT Sans', sans-serif;
+    float: right;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    padding: 15px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.5em;
+    
+    -webkit-transition: all 0.5s ease-out;
+    -moz-transition: all 0.5s ease-out;
+    -ms-transition: all 0.5s ease-out;
+    -o-transition: all 0.5s ease-out;
+    transition: all 0.5s ease-out;
+}
+
+footer form button:hover {
+    color: #3DA3A2;
+}
+
+
+
+/* ==========================================================================
+	MEDIA QUERIES FOR RESPONSIVE WEB DESIGN.
+    FOR SIMPLICITY USE SAME QUERIES (PHONE, TABLET, etc.) 
+   ========================================================================== */
+
+@media only screen and (max-width: 48em),
+@media only screen and (max-width: 60em),
+@media only screen and (max-width: 78em) {
+    
+    #messages .message {
+        max-width: 100%;
+    }
+    
+    footer form input[type='text'] {
+        width: 100%;
+    }
+    
+    footer form button {
+        display: none;
+    }
+    
+    #chat-wrapper #messages {
+        height: 85%;
+    }
+
+    footer {
+        height: 15%;
+    }
+    
 }
