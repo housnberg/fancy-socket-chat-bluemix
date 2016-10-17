@@ -11,14 +11,14 @@ var birds = require('./routs');
 /*
  * Array for all connected users.
  */
-var connectedUsers;
+var connectedUsers = new Array();
 
 /*
  * Load Server Config file.
  */
 var config = require('./config.json');
 
-server.listen(config.port, function() {
+server.listen(config.port, function () {
     console.log('##### listening on  port ' + config.port);
 });
 
@@ -55,16 +55,23 @@ io.on('connection', function(socket) {
         var data = {userName: socket.userName, message: msg, timeStamp: getCurrentDate()};
         socket.broadcast.emit('chat message', data); //Broadcast message to all
         socket.emit('chat message own', data); //Send message to me (allows to define different styles)
+        
     });
     
     /*
      * Handle user join.
-     * Save the username later in n array.
      */
     socket.on('user join', function(userName, isJoinedFunc) {
         isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
         socket.userName = userName; //Assign username to socket so you can use it later
+        connectedUsers.push(userName);
         io.emit('user join', {userName: userName, timeStamp: getCurrentDate()});
+    });
+    /*
+    * Handle request of current users
+    */
+    socket.on('userlist', function () {
+        socket.emit('userlist',connectedUsers); //Send message to me (allows to define different styles)
     });
 });
 
