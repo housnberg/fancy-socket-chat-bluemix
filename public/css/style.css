@@ -152,7 +152,8 @@ html, body  {
 /*============================== USER JOINS/LEFT CHAT ==============================*/
 
 .joined,
-.left {
+.left,
+.users {
     line-height: 0em;
     padding-left: 20px;
     padding-right: 20px;
@@ -171,17 +172,40 @@ html, body  {
     text-align: right;
 }
 
+.users {
+    margin-top: 10px !important;
+    border: 1px solid #c0c0c0;
+}
+
 .joined span,
 .left span {
     font-style: normal;
 }
 
-.joined span {
+.joined span,
+.users span {
     float: right;
 }
 
 .left span {
     float: left;
+}
+
+.users div {
+    line-height: 1.25em;
+}
+
+.users div:first-child {
+    margin-top: 20px;
+}
+
+.users div:last-child {
+    margin-bottom: 20px;
+}
+
+.users div:only-child {
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 
@@ -190,15 +214,30 @@ html, body  {
 	FOOTER -> Chat messages, etc.
    ========================================================================== */
 
+#upload {
+    height: 0.5%;
+    background: #FD5F5E;
+    width: 0%;
+}
+
 footer {
-    height: 7.5%;
+    height: 7%;
     background: #FFFFFF;
+    position: relative;
+}
+
+footer > button {
+    display: inline-block;
+}
+
+footer > button > i {
+    font-size:  1.5em !important;
 }
 
 footer form {
     display: inline-block;
     height: 100%;
-    width: 100%;
+    width: 90%;
 }
 
 footer form input[type='text'] {
@@ -222,8 +261,8 @@ footer form input[type='text']:focus {
     color: #4B515B;
 }
 
-footer form button {
-    position: relative;
+footer button {
+    position: absolute;
     font-family: 'PT Sans', sans-serif;
     float: right;
     height: 100%;
@@ -241,8 +280,20 @@ footer form button {
     transition: all 0.5s ease-out;
 }
 
-footer form button:hover {
+footer #button-file {
+    right: 75px;
+}
+
+footer #send {
+    right: 0;
+}
+
+footer button:hover {
     color: #3DA3A2;
+}
+
+footer #clear {
+    right: 130px;
 }
 
 
