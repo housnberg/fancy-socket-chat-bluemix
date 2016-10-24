@@ -19,6 +19,7 @@ var birds = require('./routs');
  * Array for all connected users.
  */
 var connectedUsers = new Array();
+var userMap = new Map();
 
 /*
  * Load Server Config file.
@@ -81,11 +82,14 @@ io.on('connection', function(socket) {
         isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
         socket.userName = userName; //Assign username to socket so you can use it later
         connectedUsers.push(userName);
+        userMap.set(socket.userName,socket);
         io.emit('user join leave', {userName: userName, timeStamp: getCurrentDate(), isJoined: true});
     });
     
     socket.on('disconnect', function() {
         io.emit('user join leave', {userName: socket.userName, timeStamp: getCurrentDate(), isJoined: false});
+        var pos = connectedUsers.indexOf(socket.userName);
+        connectedUsers.splice(pos,1);
     });
     
     /*
