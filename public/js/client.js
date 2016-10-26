@@ -41,7 +41,7 @@ $(document).ready(function() {
             });   
         }
         //Stop browser navigating from page
-        //You could also use event.preventDefault() insted returning false
+        //You could also use event.preventDefault() instead returning false
         return false;
     });
     
@@ -82,7 +82,6 @@ $(document).ready(function() {
         $('#messages').append($('<li class="' + userClass + '">').text('User "' + data.userName + '" ' + userClass + ' the chat').append($('<span>').text(data.timeStamp)));
     });
     
-    
     socket.on('file', function(data) {
         var chatClass = "message-wrapper";
         if (data.own) {
@@ -91,6 +90,10 @@ $(document).ready(function() {
         $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="username">').text(data.userName)).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
     });
     
+    socket.on('error', function(data) {
+        $('.error').append(data.errorMessage);
+    });
+
     /*
      * It is difficult to style an input-file type field.
      * This workaround is replacing the input-file type field by a button field providing the same functionality as the input-file type field.
@@ -129,7 +132,6 @@ $.fn.uploadFile = function() {
         blobStream.on('data', function(chunk) {
             size += chunk.length;
             width = (Math.floor(size / fileSize * 100) + '%').trim();
-            console.log(width);
             $upload.css('width', width);
         });
 

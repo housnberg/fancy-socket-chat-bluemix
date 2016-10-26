@@ -1,22 +1,30 @@
-var express = require('express');
-var router = express.Router();
+module.exports = function(io) {
 
-// middleware that is specific to this router
-router.use(function timeLog(req, res, next) {
-  console.log('Time: ', Date.now());
-  next();
-});
+    var config = require('./config.json');
+    var express = require('express');
+    var router = express.Router();
 
-/*
- * Include static files like css/js via middleware.
- */
-router.use(express.static(__dirname + '/public'));
+    /*
+     * Include static files like css/js via middleware.
+     */
+    router.use(express.static(__dirname + '/public'));
 
-/*
- * Route Handler -> 
- */
-router.get('/', function(req, res) {
-    res.sendFile(__dirname + '/public/index.html');
-});
+    /*
+     * Main Routing handler
+     */
+    router.get('/', function(req, res) {
+        res.sendFile(__dirname + '/public/index.html');
+    });
+    
+    /*
+     * Allow to download files
+     */
+    router.get('/' + config.filePath + ':filename(*)', function(req, res) {
+        var file = req.params.filename;
+        var path = __dirname + "/" + config.filePath + file;
 
-module.exports = router;
+        res.download(path);
+    });
+
+    return router;
+}

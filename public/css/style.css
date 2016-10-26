@@ -38,6 +38,21 @@ html, body  {
 	zoom: 1;
 }
 
+.valigner {
+    height: 100%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.valigner ~ * {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.error {
+    margin-top: 10px;
+    color: #FD5F5E;
+}
 
 
 /* ==========================================================================
@@ -51,9 +66,23 @@ html, body  {
     min-width: 100%;
     position: fixed;
     background: white;
+    z-index: 999;
+    text-align: center;
 }
 
+input[type='text'], 
+input[type='email'], 
+textarea,
+#login button {
+    border: 2px solid rgb(40, 40, 47);
+    padding: 5px;
+    background: transparent;
+}
 
+#login button {
+    font-weight: 400;
+    border-width: 4px;
+} 
 
 /* ==========================================================================
 	CHAT Panel
@@ -196,7 +225,7 @@ html, body  {
 }
 
 .users div:first-child {
-    margin-top: 20px;
+    margin-top: 20px !important;
 }
 
 .users div:last-child {
