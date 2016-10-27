@@ -13806,7 +13806,7 @@ arguments[4][40][0].apply(exports,arguments)
 arguments[4][41][0].apply(exports,arguments)
 },{"dup":41}],89:[function(require,module,exports){
 var file;
-    
+
 var io = require('socket.io-client');
 var ss = require('socket.io-stream');
 
@@ -13819,33 +13819,43 @@ ss.forceBase64 = true;
  */
 $(document).ready(function() {
     
-     $('footer form').submit(function() {
+    /*
+     * Submit message and/or file.
+     */
+    $('footer form').submit(function() {
         var $message = $.trim($('#message').val());
          
         if ($message) {
             if($message === '/users') { //if the message is /users call function to send out the list of current users
                 socket.emit('user list');
+            } else if($message.startsWith('@')) {
+                if ($message.split(" ")[1] !== undefined && $message.split(" ")[1] != null) {
+                    socket.emit('direct message', $message);   
+                }
             } else {
                 socket.emit('chat message', $message);
-                $().uploadFile();
             }
             $('#message').val('');
-        } else {
-            $().uploadFile();
         }
+        $().uploadFile();
         return false;
     });
     
+    /*
+     * Submit the username and fade out the overlaying #login section.
+     * Note: Only fade out an HTML-Element is not best practice, as you can manipulate CSS und HTML via the Browser.
+     */
     $('#login form').submit(function(event) {
-        var $input = $.trim($('#username').val());
-        if ($input) {
-            socket.emit('user join', $input, function(isJoined) {
+        var $username = $.trim($('#username').val());
+        if ($username) {
+            socket.emit('user join', $username, function(isJoined) {
                 if (isJoined) {
                     $('#login').fadeOut(1000);
                 } else {
-                    
+                    $('.error').append("the user with the username '" + $username + "' already exists.");
                 }
             });   
+            $('#username').val('');
         }
         //Stop browser navigating from page
         //You could also use event.preventDefault() instead returning false
@@ -13863,8 +13873,8 @@ $(document).ready(function() {
     });
     
     /*
-    *fill a own-message-box with the current users
-    */
+     * Fill a own-message-box with the current users
+     */
     socket.on('user list', function(data) {
         var $users = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp));
         for (var i = 0; i < data.users.length; i++) {
@@ -13873,14 +13883,27 @@ $(document).ready(function() {
         $('#messages').append($users);
     });
 
+    /*
+     * Show the received message in the browser.
+     * There are two types of chat messages. Default, own and direct.
+     * It allows to style these messages independent of each other.
+     */
     socket.on('chat message', function(data) {
         var chatClass = "message-wrapper";
         if (data.own) {
             chatClass += " own";
+        } 
+        if (data.direct) {
+            chatClass += " direct";
         }
         $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="username">').text(data.userName)).append($('<div class="message">').text(data.message).append($('<div class="timestamp">').text(data.timeStamp))));
     });
     
+    /*
+     * Show a leave or join message in the browser.
+     * There are two types of messages. Leave and Join.
+     * It allows to style these messages independent of each other.
+     */
     socket.on('user join leave', function(data) {
         var userClass = 'left';
         if (data.isJoined) {
@@ -13889,17 +13912,16 @@ $(document).ready(function() {
         $('#messages').append($('<li class="' + userClass + '">').text('User "' + data.userName + '" ' + userClass + ' the chat').append($('<span>').text(data.timeStamp)));
     });
     
-    
+    /*
+     * Show the submitted filename as a message in the browser.
+     * Do this via a link, so you can download it easily by clicking on this link.
+     */
     socket.on('file', function(data) {
         var chatClass = "message-wrapper";
         if (data.own) {
             chatClass += " own";
         }
         $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="username">').text(data.userName)).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
-    });
-    
-    socket.on('error', function(data) {
-        $('.error').append(data.errorMessage);
     });
 
     /*
@@ -13913,7 +13935,7 @@ $(document).ready(function() {
     });
     
     /*
-     * Clear everytinh if the "X"-Button is clicked.
+     * Clear everything if the "X"-Button is clicked.
      */
     $('footer #clear').click(function() {
         file = undefined;
@@ -13937,6 +13959,7 @@ $.fn.uploadFile = function() {
         var blobStream = ss.createBlobReadStream(file);
 
         var size = 0;
+        // Show the transmitted filesize in a progress bar
         blobStream.on('data', function(chunk) {
             size += chunk.length;
             width = (Math.floor(size / fileSize * 100) + '%').trim();

@@ -15,7 +15,7 @@ var path = require('path');
 
 /*
  * Decouple the server functionality from the routing functionality.
- * So use router as an own module.
+ * Use routing as an own module.
  */
 var router = require('./routs')(io);
 
@@ -39,7 +39,7 @@ app.use('/', router);
 io.on('connection', function(socket) {
     
     /*
-     * Handle user connection.
+     * Handle user join.
      */
     socket.on('user join', function(userName, isJoinedFunc) {
         if (connectedUsers.indexOf(userName) == -1) {
@@ -47,37 +47,40 @@ io.on('connection', function(socket) {
             socket.userName = userName; //Assign username to socket so you can use it later
             connectedUsers.push(userName);
             io.emit('user join leave', {userName: userName, timeStamp: getCurrentDate(), isJoined: true});   
+            userMap.set(socket.userName, socket);
         } else {
-            io.emit('error', {errorMessage: "the user with the username '" + userName + "' already exists."})
+            //Indicate that the username is already taken.
+            isJoinedFunc(false);
         }
     });
     
     /*
-    * Handle chat message submisson
+    * Handle chat message submisson.
     */
     socket.on('chat message', function(msg) {
         if (isAuthenticated(socket)) {
             var data = {userName: socket.userName, message: msg, timeStamp: getCurrentDate(), own: false};
-            socket.broadcast.emit('chat message', data); //Broadcast message to all users except me.
+            //Broadcast message to all users except me.
+            socket.broadcast.emit('chat message', data);
             data.own = true;
-            socket.emit('chat message', data); //Send message only to me   
+            //Send message only to me   
+            socket.emit('chat message', data);
         }
     });
 
     /*
      * Handle user disconnection.
      */
-        userMap.set(socket.userName,socket);
     socket.on('disconnect', function() {
         if (isAuthenticated(socket)) {
+            var pos = connectedUsers.indexOf(socket.userName);
+            connectedUsers.splice(pos, 1);
             io.emit('user join leave', {userName: socket.userName, timeStamp: getCurrentDate(), isJoined: false});
         }
-        var pos = connectedUsers.indexOf(socket.userName);
-        connectedUsers.splice(pos,1);
     });
 
     /*
-     * Handle request of current users
+     * Handle request of a list of all current users.
      */
     socket.on('user list', function () {
         if (isAuthenticated(socket)) {
@@ -86,7 +89,26 @@ io.on('connection', function(socket) {
     });
 
     /*
-     * Handle submission of a file
+     * Handle direct message submission.
+     */
+    socket.on('direct message', function (msg) {
+        var userName = msg.substr(0, msg.indexOf(' ')).replace('@','');
+        var message = msg.substr(msg.indexOf(' ') + 1);
+        
+        var tempSocket = userMap.get(userName);
+        var data = {userName: socket.userName, message: message, timeStamp: getCurrentDate(), own: false, direct: true};
+        
+        //If socketName is undefined or null there is no user with this name available.
+        //Don't allow the send a private message to yourself.
+        if (tempSocket !== undefined && tempSocket != null && tempSocket != socket) {
+            tempSocket.emit('chat message', data); //Broadcast message to all users except me.
+            data.own = true;
+            socket.emit('chat message', data); //Send message only to me   
+        }
+    });
+    
+    /*
+     * Handle submission of a file.
      */
     ss(socket).on('file', function(stream, data) {
         if (isAuthenticated(socket)) {
@@ -107,7 +129,7 @@ io.on('connection', function(socket) {
  * Check if the user is authenticated.
  */
 function isAuthenticated(socket) {
-    //There is no socket available. Therefore the user cannot be autzhenticated.
+    //There is no socket available. Therefore the user cannot be authenticated.
     if (socket === undefined) {
         return false;
     }
