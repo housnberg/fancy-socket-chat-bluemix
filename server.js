@@ -1,3 +1,5 @@
+var LOCALE = 'de-DE';
+
 /*
  * Import of the express module.
  */
@@ -46,7 +48,7 @@ io.on('connection', function(socket) {
             isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
             socket.userName = userName; //Assign username to socket so you can use it later
             connectedUsers.push(userName);
-            io.emit('user join leave', {userName: userName, timeStamp: getCurrentDate(), isJoined: true});   
+            io.emit('user join leave', {userName: userName, timeStamp: getTimestamp(), isJoined: true});   
             userMap.set(socket.userName, socket);
         } else {
             //Indicate that the username is already taken.
@@ -59,7 +61,7 @@ io.on('connection', function(socket) {
     */
     socket.on('chat message', function(msg) {
         if (isAuthenticated(socket)) {
-            var data = {userName: socket.userName, message: msg, timeStamp: getCurrentDate(), own: false};
+            var data = {userName: socket.userName, message: msg, timeStamp: getTimestamp(true), own: false};
             //Broadcast message to all users except me.
             socket.broadcast.emit('chat message', data);
             data.own = true;
@@ -75,7 +77,7 @@ io.on('connection', function(socket) {
         if (isAuthenticated(socket)) {
             var pos = connectedUsers.indexOf(socket.userName);
             connectedUsers.splice(pos, 1);
-            io.emit('user join leave', {userName: socket.userName, timeStamp: getCurrentDate(), isJoined: false});
+            io.emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: false});
         }
     });
 
@@ -84,7 +86,7 @@ io.on('connection', function(socket) {
      */
     socket.on('user list', function () {
         if (isAuthenticated(socket)) {
-            socket.emit('user list', {users: connectedUsers, timeStamp: getCurrentDate()}); //Send message to me (allows to define different styles)
+            socket.emit('user list', {users: connectedUsers, timeStamp: getTimestamp(true)}); //Send message to me (allows to define different styles)
         }
     });
 
@@ -96,7 +98,7 @@ io.on('connection', function(socket) {
         var message = msg.substr(msg.indexOf(' ') + 1);
         
         var tempSocket = userMap.get(userName);
-        var data = {userName: socket.userName, message: message, timeStamp: getCurrentDate(), own: false, direct: true};
+        var data = {userName: socket.userName, message: message, timeStamp: getTimestamp(true), own: false, direct: true};
         
         //If socketName is undefined or null there is no user with this name available.
         //Don't allow the send a private message to yourself.
@@ -116,7 +118,7 @@ io.on('connection', function(socket) {
             //Neither "finish", "close" NOR "end" callbacks are working -> BUG
             //We have to emit the Link data althought the data upload is not finished. 
             stream.pipe(fs.createWriteStream(filename));
-            var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: getCurrentDate(), userName: socket.userName, own: false};
+            var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: getTimestamp(), userName: socket.userName, own: false};
             socket.broadcast.emit('file', newData);
             newData.own = true;
             socket.emit('file', newData);
@@ -139,9 +141,14 @@ function isAuthenticated(socket) {
 }
 
 /*
- * Returns the current Time in the format HH:MM:SS
+ * Returns the Timestamp.
+ * If onlyTime is true, this method returns only the current time.
  */
-function getCurrentDate() {
+function getTimestamp(onlyTime) {
     var now = new Date(Date.now());
-    return now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+    if (onlyTime) {
+        return now.toLocaleTimeString(LOCALE);  
+    } else {
+        return now.toLocaleDateString(LOCALE) + " " + now.toLocaleTimeString(LOCALE);
+    }
 }
