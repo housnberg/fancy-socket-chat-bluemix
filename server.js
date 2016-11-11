@@ -63,6 +63,11 @@ var database = cloudant.db.use('fancy-socket-chat');
 if (database === undefined) {
     console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
 } else {
+    database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
+        if (!err) {
+            console.log(body)
+        }
+    })
     /*
     database.index(function(er, result) {
         if (er) {
