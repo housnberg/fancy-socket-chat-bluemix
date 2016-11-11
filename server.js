@@ -35,8 +35,8 @@ var userMap = new Map();
  */
 var config = require('./config.json');
 
-server.listen(process.env.PORT || config.port, function () {
-    console.log('##### listening on  ');
+server.listen(appEnv.port || config.port, function () {
+    console.log('##### listening on  ' + appEnv.url);
 });
 
 app.use('/', router);
