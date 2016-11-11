@@ -41,6 +41,9 @@ var config = require('./config.json');
 var services = null;
 var credentials = null;
 
+/*
+ * Search for the cloudant service.
+ */
 if (process.env.VCAP_SERVICES) {
 	services = JSON.parse(process.env.VCAP_SERVICES);
 
@@ -54,8 +57,15 @@ if (process.env.VCAP_SERVICES) {
 	console.log("ERROR: Cloudant Service was not bound!");
 }
 
-server.listen(appEnv.port || config.port, function () {
-    console.log('##### listening on  ' + appEnv.url);
+var cloudant = Cloudant(credentials.url);
+
+var database = cloudant.db.use('fancy-socket-chat');
+if (database === undefined) {
+    console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
+}
+
+cloudant.db.list(function(err, allDbs) {
+  console.log('All my databases: %s', allDbs.join(', '))
 });
 
 var cloudant = Cloudant(credentials.url);
@@ -180,3 +190,7 @@ function getTimestamp(onlyTime) {
         return now.toLocaleDateString(LOCALE) + " " + now.toLocaleTimeString(LOCALE);
     }
 }
+
+server.listen(appEnv.port || config.port, function () {
+    console.log('##### listening on  ' + appEnv.url);
+});
