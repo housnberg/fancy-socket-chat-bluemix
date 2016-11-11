@@ -8,6 +8,9 @@ var	app = express();
 var	server = require('http').createServer(app);
 var	io = require('socket.io').listen(server);
 
+var cfenv = require('cfenv');
+var appEnv = cfenv.getAppEnv();
+
 /*
  * ALlows to stream binary data.
  */
@@ -32,8 +35,8 @@ var userMap = new Map();
  */
 var config = require('./config.json');
 
-server.listen(config.port, function () {
-    console.log('##### listening on  port ' + config.port);
+server.listen(process.env.PORT || config.port, function () {
+    console.log('##### listening on  ');
 });
 
 app.use('/', router);
