@@ -66,8 +66,20 @@ if (database === undefined) {
     database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
         if (!err) {
             console.log(body)
+        } else {
+            console.log("ERROR: Could not store the values " + err);
         }
-    })
+    });
+    
+    database.list(function(err, body) {
+        if (!err) {
+            body.rows.forEach(function(doc) {
+                console.log(doc);
+            });
+        } else {
+            console.log("ERROR: Could not read the docs.");
+        }
+    });
     /*
     database.index(function(er, result) {
         if (er) {
