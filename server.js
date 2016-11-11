@@ -11,6 +11,9 @@ var	io = require('socket.io').listen(server);
 var cfenv = require('cfenv');
 var appEnv = cfenv.getAppEnv();
 
+// Load the Cloudant library.
+var Cloudant = require('cloudant');
+
 /*
  * ALlows to stream binary data.
  */
@@ -34,6 +37,22 @@ var userMap = new Map();
  * Load Server Config file.
  */
 var config = require('./config.json');
+
+var services = null;
+var credentials = null;
+
+if (process.env.VCAP_SERVICES) {
+	services = JSON.parse(process.env.VCAP_SERVICES);
+
+	var cloudantService = services['cloudantNoSQLDB'];
+	for (var index in cloudantService) {
+		if (cloudantService[index].name === 'cloudant-nosql-db') {
+			credentials = cloudantService[index].credentials;
+		}
+	}
+} else {
+	console.log("ERROR: Cloudant Service was not bound!");
+}
 
 server.listen(appEnv.port || config.port, function () {
     console.log('##### listening on  ' + appEnv.url);
