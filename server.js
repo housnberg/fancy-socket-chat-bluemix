@@ -58,6 +58,12 @@ server.listen(appEnv.port || config.port, function () {
     console.log('##### listening on  ' + appEnv.url);
 });
 
+var cloudant = Cloudant(credentials.url);
+
+cloudant.db.list(function(err, allDbs) {
+  console.log('All my databases: %s', allDbs.join(', '))
+});
+
 app.use('/', router);
 
 io.on('connection', function(socket) {
