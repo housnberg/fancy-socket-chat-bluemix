@@ -62,13 +62,23 @@ var cloudant = Cloudant(credentials.url);
 var database = cloudant.db.use('fancy-socket-chat');
 if (database === undefined) {
     console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
+} else {
+    /*
+    database.index(function(er, result) {
+        if (er) {
+            throw er;
+        }
+
+        console.log('The database has %d indexes', result.indexes.length);
+        for (var i = 0; i < result.indexes.length; i++) {
+            console.log('  %s (%s): %j', result.indexes[i].name, result.indexes[i].type, result.indexes[i].def);
+        }
+
+        result.should.have.a.property('indexes').which.is.an.Array;
+        done();
+    });
+    */
 }
-
-cloudant.db.list(function(err, allDbs) {
-  console.log('All my databases: %s', allDbs.join(', '))
-});
-
-var cloudant = Cloudant(credentials.url);
 
 cloudant.db.list(function(err, allDbs) {
   console.log('All my databases: %s', allDbs.join(', '))
