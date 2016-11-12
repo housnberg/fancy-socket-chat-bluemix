@@ -72,7 +72,7 @@ if (isServiceAvailable(cloudant)) {
             }  
         };
         
-        db.find(first_name, function(er, result) {
+        database.find(first_name, function(er, result) {
             if (er) {
                 throw er;
             }
