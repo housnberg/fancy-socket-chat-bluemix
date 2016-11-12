@@ -42,27 +42,30 @@ $(document).ready(function() {
         var clickedButtonName = $(this).find("input[type=submit]:focus").attr("name");
         var $username = $.trim($('#username').val());
         var $password = $.trim($('#password').val());
+        var data = {userName: $username, password: md5($password)}; //Hash the password 
         if ($username && $password) {
             //Determine if the "register" oder the "login" submit button was clicked
             if (clickedButtonName === "register") {
-                socket.emit('user register', $username, function(isRegistered) {
+                socket.emit('user registration', data, function(isRegistered) {
                     if (isRegistered) {
-                        
+                        window.alert("registered");
                     } else {
                         $('.error').append("the user with the username '" + $username + "' already exists.");
                     }
                 });
             } else {
-                socket.emit('user join', $username, function(isJoined) {
+                socket.emit('user join', data, function(isJoined) {
                     if (isJoined) {
                         $('#login').fadeOut(1000);
                     } else {
-                        $('.error').append("the user with the username '" + $username + "' already exists.");
+                        $('.error').append("The username '" + $username + "' doesnt exist or the password is wrong.");
                     }
                 });    
-            }  
+            }
             $('#username').val('');
             $('#password').val('');
+        } else {
+            $('.error').append("Please specify a username and a password.");
         }
         //Stop browser navigating from page
         //You could also use event.preventDefault() instead returning false

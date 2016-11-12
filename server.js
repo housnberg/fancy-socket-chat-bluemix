@@ -71,13 +71,6 @@ if (isServiceAvailable(cloudant)) {
     if (database === undefined) {
         console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
     } else {
-        userSelector.selector = "admin";
-        var resultSet = processQuery(userSelector);
-        /*
-        for (var i = 0; i < resultSet.docs.length; i++) {
-            console.log('  Doc id: ' + resultSet.docs[i]._id + " " + resultSet.docs[i].password);
-        }
-        */
         /*
         database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
             if (!err) {
@@ -126,55 +119,69 @@ io.on('connection', function(socket) {
     /*
      * Handle user registration.
      */
-    socket.on('user registration', function(userName, isRegisteredFunc) {
+    socket.on('user registration', function(data, isRegisteredFunc) {
         if (isServiceAvailable(cloudant)) {
-            userSelector.selector = userName;
-            var resultSet = processQuery(userSelector);
-            /*
-            for (var i = 0; i < resultSet.docs.length; i++) {
-                console.log('  Doc id: %s', resultSet.docs[i]._id);
-            }
-            */
-            /*
-            if (resultSet.docs.length == 0) {
-                 database.insert({_id: userName, password: password}, function(err, body) {
-                    if (!err) {
-                        console.log(body)
-                    } else {
-                        console.log("ERROR: Could not store the values " + err);
-                    }
-                });
-            }
-            */
-        }
+            userSelector.selector._id = data.userName.toLocaleLowerCase();
         
-        /*
-        if (connectedUsers.indexOf(userName) == -1) {
-            isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
-            socket.userName = userName; //Assign username to socket so you can use it later
-            connectedUsers.push(userName);
-            io.emit('user join leave', {userName: userName, timeStamp: getTimestamp(), isJoined: true});   
-            userMap.set(socket.userName, socket);
-        } else {
-            //Indicate that the username is already taken.
-            isJoinedFunc(false);
+            database.find(userSelector, function(error, resultSet) {
+                if (error) {
+                    console.log("ERROR: Something went wrong during query procession: " + error);
+                } else {
+                    if (resultSet.docs.length == 0) {
+                        database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password}, function(error, body) {
+                            if (!error) {
+                                isRegisteredFunc(true);
+                            } else {
+                                console.log("ERROR: Could not store the values " + error);
+                            }
+                        });  
+                    } else {
+                        isRegisteredFunc(false);
+                    }   
+                }
+            });
         }
-        */
     });
     
     /*
      * Handle user login.
      */
-    socket.on('user join', function(userName, isJoinedFunc) {
-        if (connectedUsers.indexOf(userName) == -1) {
-            isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
-            socket.userName = userName; //Assign username to socket so you can use it later
-            connectedUsers.push(userName);
-            io.emit('user join leave', {userName: userName, timeStamp: getTimestamp(), isJoined: true});   
-            userMap.set(socket.userName, socket);
+    socket.on('user join', function(data, isJoinedFunc) {
+        
+        if (isServiceAvailable(cloudant)) {
+            userSelector.selector._id = data.userName.toLocaleLowerCase();
+        
+            database.find(userSelector, function(error, resultSet) {
+                if (error) {
+                    console.log("ERROR: Something went wrong during query procession: " + error);
+                } else {
+                    if (resultSet.docs.length == 0) {
+                        isJoinedFunc(false); //Username not correct
+                    } else {
+                        if (resultSet.docs[0].password === data.password) {
+                            isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
+                            socket.userName = data.userName; //Assign username to socket so you can use it later
+                            connectedUsers.push(data.userName);
+                            io.emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
+                            userMap.set(socket.userName, socket);
+                        } else {
+                            isJoinedFunc(false); //Password not correct
+                        }
+                    }   
+                }
+            });
         } else {
-            //Indicate that the username is already taken.
-            isJoinedFunc(false);
+            //You dont really need this else part. But it allows you to run the application in local code
+            if (connectedUsers.indexOf(data.userName) == -1) {
+                isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
+                socket.userName = data.userName; //Assign username to socket so you can use it later
+                connectedUsers.push(data.userName);
+                io.emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
+                userMap.set(socket.userName, socket);
+            } else {
+                //Indicate that the username is already taken.
+                isJoinedFunc(false);
+            }   
         }
     });
     
@@ -278,8 +285,10 @@ function processQuery(selector) {
             } else {
                 resultSet = result;
             }
+            //console.log(resultSet.docs[0])
         });          
     }
+    console.log(resultSet.docs[0]);
     return resultSet;
 }
 
