@@ -39,16 +39,30 @@ $(document).ready(function() {
      * Note: Only fade out an HTML-Element is not best practice, as you can manipulate CSS und HTML via the Browser.
      */
     $('#login form').submit(function(event) {
+        var clickedButtonName = $(this).find("input[type=submit]:focus").attr("name");
         var $username = $.trim($('#username').val());
-        if ($username) {
-            socket.emit('user join', $username, function(isJoined) {
-                if (isJoined) {
-                    $('#login').fadeOut(1000);
-                } else {
-                    $('.error').append("the user with the username '" + $username + "' already exists.");
-                }
-            });   
+        var $password = $.trim($('#password').val());
+        if ($username && $password) {
+            //Determine if the "register" oder the "login" submit button was clicked
+            if (clickedButtonName === "register") {
+                socket.emit('user register', $username, function(isRegistered) {
+                    if (isRegistered) {
+                        
+                    } else {
+                        $('.error').append("the user with the username '" + $username + "' already exists.");
+                    }
+                });
+            } else {
+                socket.emit('user join', $username, function(isJoined) {
+                    if (isJoined) {
+                        $('#login').fadeOut(1000);
+                    } else {
+                        $('.error').append("the user with the username '" + $username + "' already exists.");
+                    }
+                });    
+            }  
             $('#username').val('');
+            $('#password').val('');
         }
         //Stop browser navigating from page
         //You could also use event.preventDefault() instead returning false

@@ -38,8 +38,10 @@ var userMap = new Map();
  */
 var config = require('./config.json');
 
-var services = null;
-var credentials = null;
+var services;
+var credentials;
+var cloudant;
+var database;
 
 /*
  * Search for the cloudant service.
@@ -53,60 +55,110 @@ if (process.env.VCAP_SERVICES) {
 			credentials = cloudantService[index].credentials;
 		}
 	}
+    cloudant = Cloudant(credentials.url);
 } else {
-	console.log("ERROR: Cloudant Service was not bound!");
+	console.log("ERROR: Cloudant Service was not bound! Are you running in local mode?");
 }
 
-var cloudant = Cloudant(credentials.url);
+if (isServiceAvailable(cloudant)) {
+    database = cloudant.db.use('fancy-socket-chat');
+    if (database === undefined) {
+        console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
+    } else {
+        
+        var first_name = {
+            "selector": {
+                "_id": "admin"
+            }  
+        }
+        
+        db.find({selector:{name:'Alice'}}, function(er, result) {
+            if (er) {
+                throw er;
+            }
 
-var database = cloudant.db.use('fancy-socket-chat');
-if (database === undefined) {
-    console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
-} else {
-    database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
-        if (!err) {
-            console.log(body)
-        } else {
-            console.log("ERROR: Could not store the values " + err);
-        }
-    });
-    
-    database.list(function(err, body) {
-        if (!err) {
-            body.rows.forEach(function(doc) {
-                console.log(doc);
-            });
-        } else {
-            console.log("ERROR: Could not read the docs.");
-        }
-    });
-    /*
-    database.index(function(er, result) {
-        if (er) {
+            console.log('Found %d documents with name Alice', result.docs.length);
+            for (var i = 0; i < result.docs.length; i++) {
+                console.log('  Doc id: %s', result.docs[i]._id);
+            }
+        });
+        
+        /*
+        db.index(first_name, function(er, response) {
+          if (er) {
             throw er;
-        }
+          }
 
-        console.log('The database has %d indexes', result.indexes.length);
-        for (var i = 0; i < result.indexes.length; i++) {
-            console.log('  %s (%s): %j', result.indexes[i].name, result.indexes[i].type, result.indexes[i].def);
-        }
+          console.log('Index creation result: %s', response.result);
+        });
+        */
+        /*
+        database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
+            if (!err) {
+                console.log(body)
+            } else {
+                console.log("ERROR: Could not store the values " + err);
+            }
+        });
 
-        result.should.have.a.property('indexes').which.is.an.Array;
-        done();
+        database.list(function(err, body) {
+            if (!err) {
+                body.rows.forEach(function(doc) {
+                    console.log(doc);
+                });
+            } else {
+                console.log("ERROR: Could not read the docs.");
+            }
+        });
+        */
+        /*
+        database.index(function(er, result) {
+            if (er) {
+                throw er;
+            }
+
+            console.log('The database has %d indexes', result.indexes.length);
+            for (var i = 0; i < result.indexes.length; i++) {
+                console.log('  %s (%s): %j', result.indexes[i].name, result.indexes[i].type, result.indexes[i].def);
+            }
+
+            result.should.have.a.property('indexes').which.is.an.Array;
+            done();
+        });
+        */
+    }
+
+    cloudant.db.list(function(err, allDbs) {
+      console.log('All my databases: %s', allDbs.join(', '))
     });
-    */
 }
-
-cloudant.db.list(function(err, allDbs) {
-  console.log('All my databases: %s', allDbs.join(', '))
-});
 
 app.use('/', router);
 
 io.on('connection', function(socket) {
     
     /*
-     * Handle user join.
+     * Handle user registration.
+     */
+    socket.on('user registration', function(userName, isRegisteredFunc) {
+        if (isServiceAvailable(cloudant)) {
+                
+        }
+        
+        if (connectedUsers.indexOf(userName) == -1) {
+            isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
+            socket.userName = userName; //Assign username to socket so you can use it later
+            connectedUsers.push(userName);
+            io.emit('user join leave', {userName: userName, timeStamp: getTimestamp(), isJoined: true});   
+            userMap.set(socket.userName, socket);
+        } else {
+            //Indicate that the username is already taken.
+            isJoinedFunc(false);
+        }
+    });
+    
+    /*
+     * Handle user login.
      */
     socket.on('user join', function(userName, isJoinedFunc) {
         if (connectedUsers.indexOf(userName) == -1) {
@@ -203,6 +255,17 @@ function isAuthenticated(socket) {
     if (socket.userName !== undefined) {
         return true;
     }
+}
+
+/*
+ * Check if a given bluemix service is available.
+ */
+function isServiceAvailable(bluemixService) {
+    return (bluemixService !== null && bluemixService !== undefined);
+}
+
+function getUser() {
+    
 }
 
 /*

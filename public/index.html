@@ -18,12 +18,19 @@
         <section id="login">
             <div class="valigner"></div>
             <div>
-                <h1>Enter a username:</h1>
-                <form id="login-form">
-                    <input type="text" id="username"/>
-                    <button type="submit">Send</button>
-                </form> <!-- END form -->
-                <div class="error">
+                <div id="login-form-wrapper">
+                    <form id="login-form">
+                        <h1>Username:</h1>
+                        <input type="text" id="username"/>
+                        <br/>
+                        <h1>Password:</h1>
+                        <input type="password" id="password"/>
+                        <br/>
+                        <input id="Login" type="submit" value="Login" name="login"/>
+                        <input id="register" type="submit" value="Register" name="register"/>
+                    </form> <!-- END form -->
+                    <div class="error">
+                    </div>
                 </div>
             </div>
         </section><!-- END #login -->

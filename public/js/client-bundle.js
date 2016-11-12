@@ -13846,6 +13846,8 @@ $(document).ready(function() {
      * Note: Only fade out an HTML-Element is not best practice, as you can manipulate CSS und HTML via the Browser.
      */
     $('#login form').submit(function(event) {
+        var $clickedButton = $(this).find("input[type=submit]:focus");
+        window.alert($clickedButton.attr("name"));
         var $username = $.trim($('#username').val());
         if ($username) {
             socket.emit('user join', $username, function(isJoined) {
