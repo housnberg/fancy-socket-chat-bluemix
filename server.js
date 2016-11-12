@@ -73,10 +73,11 @@ if (isServiceAvailable(cloudant)) {
     } else {
         userSelector.selector = "admin";
         var resultSet = processQuery(userSelector);
+        /*
         for (var i = 0; i < resultSet.docs.length; i++) {
             console.log('  Doc id: ' + resultSet.docs[i]._id + " " + resultSet.docs[i].password);
         }
-        
+        */
         /*
         database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
             if (!err) {
