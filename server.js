@@ -70,9 +70,9 @@ if (isServiceAvailable(cloudant)) {
             "selector": {
                 "_id": "admin"
             }  
-        }
+        };
         
-        db.find({selector:{name:'Alice'}}, function(er, result) {
+        db.find(first_name, function(er, result) {
             if (er) {
                 throw er;
             }
