@@ -71,8 +71,11 @@ if (isServiceAvailable(cloudant)) {
     if (database === undefined) {
         console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
     } else {
-        
-        var resultSet = processQuery(userSelector);       
+        userSelector.selector = "admin";
+        var resultSet = processQuery(userSelector);
+        for (var i = 0; i < resultSet.docs.length; i++) {
+            console.log('  Doc id: ' + resultSet.docs[i]._id + " " + resultSet.docs[i].password);
+        }
         
         /*
         database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
@@ -124,9 +127,24 @@ io.on('connection', function(socket) {
      */
     socket.on('user registration', function(userName, isRegisteredFunc) {
         if (isServiceAvailable(cloudant)) {
-            
             userSelector.selector = userName;
-            var resultSet = processQuery(userSelector);         
+            var resultSet = processQuery(userSelector);
+            /*
+            for (var i = 0; i < resultSet.docs.length; i++) {
+                console.log('  Doc id: %s', resultSet.docs[i]._id);
+            }
+            */
+            /*
+            if (resultSet.docs.length == 0) {
+                 database.insert({_id: userName, password: password}, function(err, body) {
+                    if (!err) {
+                        console.log(body)
+                    } else {
+                        console.log("ERROR: Could not store the values " + err);
+                    }
+                });
+            }
+            */
         }
         
         /*
@@ -256,13 +274,9 @@ function processQuery(selector) {
         database.find(selector, function(error, result) {
             if (error) {
                 console.log("ERROR: Something went wrong during query procession: " + error);
+            } else {
+                resultSet = result;
             }
-
-            console.log('Found %d documents with name ', result.docs.length);
-            for (var i = 0; i < result.docs.length; i++) {
-                console.log('  Doc id: %s', result.docs[i]._id);
-            }
-            resultSet = result;
         });          
     }
     return resultSet;
