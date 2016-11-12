@@ -43,6 +43,12 @@ var credentials;
 var cloudant;
 var database;
 
+var userSelector = {
+    "selector": {
+        "_id": ""
+    }  
+};
+
 /*
  * Search for the cloudant service.
  */
@@ -66,32 +72,8 @@ if (isServiceAvailable(cloudant)) {
         console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
     } else {
         
-        var first_name = {
-            "selector": {
-                "_id": "admin"
-            }  
-        };
+        var resultSet = processQuery(userSelector);       
         
-        database.find(first_name, function(er, result) {
-            if (er) {
-                throw er;
-            }
-
-            console.log('Found %d documents with name Alice', result.docs.length);
-            for (var i = 0; i < result.docs.length; i++) {
-                console.log('  Doc id: %s', result.docs[i]._id);
-            }
-        });
-        
-        /*
-        db.index(first_name, function(er, response) {
-          if (er) {
-            throw er;
-          }
-
-          console.log('Index creation result: %s', response.result);
-        });
-        */
         /*
         database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
             if (!err) {
@@ -142,9 +124,12 @@ io.on('connection', function(socket) {
      */
     socket.on('user registration', function(userName, isRegisteredFunc) {
         if (isServiceAvailable(cloudant)) {
-                
+            
+            userSelector.selector = userName;
+            var resultSet = processQuery(userSelector);         
         }
         
+        /*
         if (connectedUsers.indexOf(userName) == -1) {
             isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
             socket.userName = userName; //Assign username to socket so you can use it later
@@ -155,6 +140,7 @@ io.on('connection', function(socket) {
             //Indicate that the username is already taken.
             isJoinedFunc(false);
         }
+        */
     });
     
     /*
@@ -264,8 +250,22 @@ function isServiceAvailable(bluemixService) {
     return (bluemixService !== null && bluemixService !== undefined);
 }
 
-function getUser() {
-    
+function processQuery(selector) {
+    var resultSet = null;
+    if  (isServiceAvailable(cloudant) && selector !== undefined && selector !== null) {
+        database.find(selector, function(error, result) {
+            if (error) {
+                console.log("ERROR: Something went wrong during query procession: " + error);
+            }
+
+            console.log('Found %d documents with name ', result.docs.length);
+            for (var i = 0; i < result.docs.length; i++) {
+                console.log('  Doc id: %s', result.docs[i]._id);
+            }
+            resultSet = result;
+        });          
+    }
+    return resultSet;
 }
 
 /*
