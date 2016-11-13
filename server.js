@@ -33,6 +33,9 @@ var router = require('./routs')(io);
 var connectedUsers = new Array();
 var userMap = new Map();
 
+var rooms = new Array();
+rooms.push("global");
+
 /*
  * Load Server Config file.
  */
@@ -115,6 +118,9 @@ if (isServiceAvailable(cloudant)) {
 app.use('/', router);
 
 io.on('connection', function(socket) {
+    
+    //A connected user is always in the "global" room
+    socket.room = rooms[0];
     
     /*
      * Handle user registration.
