@@ -32,9 +32,10 @@ var router = require('./routs')(io);
  */
 var connectedUsers = new Array();
 var userMap = new Map();
+var roomPasswords = new Map();
 
 var rooms = new Array();
-rooms.push("global");
+rooms.push("Global");
 
 /*
  * Load Server Config file.
@@ -121,6 +122,12 @@ io.on('connection', function(socket) {
     
     //A connected user is always in the "global" room
     socket.room = rooms[0];
+    socket.join(socket.room);
+    //Never ever create rooms statically in the html page.
+    //This allows to create the "global" room dynamically.
+    for (var i = 0; i < rooms.length; i++) {
+        socket.emit('create room', {roomName: rooms[i]});   
+    }
     
     /*
      * Handle user registration.
@@ -150,6 +157,34 @@ io.on('connection', function(socket) {
     });
     
     /*
+     * Handle room creation
+     */
+    socket.on('create room', function(roomData) {
+        if (rooms.indexOf(roomData.roomName) == -1) {
+            rooms.push(roomData.roomName);
+            roomPasswords.set(roomData.roomName, roomData.roomPassword);
+            io.emit('create room', {roomName: roomData.roomName});   
+        } else {
+            
+        } 
+    });
+    
+    socket.on('join room', function(roomData, isJoinedFunc) {
+       console.log(roomPasswords.get(roomData.roomName) + " " + roomData.roomPassword)
+       if (roomPasswords.get(roomData.roomName) === roomData.roomPassword) {
+           isJoinedFunc(true);
+           socket.leave(socket.room);
+           io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: false});
+           socket.room = roomData.roomName;
+           socket.join(socket.room);
+           io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: true}); 
+       } else {
+           isJoinedFunc(false);
+           console.log("wrong pas");
+       }
+    });
+    
+    /*
      * Handle user login.
      */
     socket.on('user join', function(data, isJoinedFunc) {
@@ -168,7 +203,7 @@ io.on('connection', function(socket) {
                             isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
                             socket.userName = data.userName; //Assign username to socket so you can use it later
                             connectedUsers.push(data.userName);
-                            io.emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
+                            io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
                             userMap.set(socket.userName, socket);
                         } else {
                             isJoinedFunc(false); //Password not correct
@@ -182,7 +217,7 @@ io.on('connection', function(socket) {
                 isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
                 socket.userName = data.userName; //Assign username to socket so you can use it later
                 connectedUsers.push(data.userName);
-                io.emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
+                io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
                 userMap.set(socket.userName, socket);
             } else {
                 //Indicate that the username is already taken.
@@ -198,7 +233,7 @@ io.on('connection', function(socket) {
         if (isAuthenticated(socket)) {
             var data = {userName: socket.userName, message: msg, timeStamp: getTimestamp(true), own: false};
             //Broadcast message to all users except me.
-            socket.broadcast.emit('chat message', data);
+            socket.broadcast.to(socket.room).emit('chat message', data);
             data.own = true;
             //Send message only to me   
             socket.emit('chat message', data);
@@ -212,7 +247,7 @@ io.on('connection', function(socket) {
         if (isAuthenticated(socket)) {
             var pos = connectedUsers.indexOf(socket.userName);
             connectedUsers.splice(pos, 1);
-            io.emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: false});
+            io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: false});
         }
     });
 
@@ -254,7 +289,7 @@ io.on('connection', function(socket) {
             //We have to emit the Link data althought the data upload is not finished. 
             stream.pipe(fs.createWriteStream(filename));
             var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: getTimestamp(), userName: socket.userName, own: false};
-            socket.broadcast.emit('file', newData);
+            socket.broadcast.to(socket.room).emit('file', newData);
             newData.own = true;
             socket.emit('file', newData);
         }

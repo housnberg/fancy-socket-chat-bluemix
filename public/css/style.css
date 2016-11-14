@@ -300,6 +300,60 @@ border-color: #507299 #507299 transparent transparent;
 }
 
 
+/*============================== ROOMS ==============================*/
+
+#rooms {
+    list-style-type: none;
+}
+
+#rooms .room:not(.current) {
+    cursor: pointer;
+}
+
+#rooms button {
+    width: 100%;
+    padding: 5px;
+    background: none;
+    border: 2px solid rgb(40, 40, 47);
+}
+
+#rooms .room {
+    margin-bottom: 15px;
+    font-family: 'PT Sans', sans-serif;
+    font-size: 1.5em;
+    color: #4B515B;
+    
+    -webkit-transition: all 0.1s ease-out;
+    -moz-transition: all 0.1s ease-out;
+    -ms-transition: all 0.1s ease-out;
+    -o-transition: all 0.1s ease-out;
+    transition: all 0.1s ease-out;
+}
+
+#rooms .room:not(.current):hover {
+    color: #3DA3A2;
+}
+
+#rooms .room:last-child {
+    margin-bottom: 0;
+}
+
+.room.current {
+    font-weight: bold;
+    color: #3DA3A2 !important;
+    transition: all 0.1s ease-out;
+}
+
+.room.current:before {
+	font-family: 'Material Icons';
+	content: 'arrow forward';
+	-webkit-font-feature-settings: 'liga';
+	-moz-font-feature-settings: 'liga';
+	-o-font-feature-settings: 'liga';
+	font-feature-settings: 'liga';
+	vertical-align: middle;
+}
+
 
 /* ==========================================================================
 	FOOTER -> Chat messages, etc.

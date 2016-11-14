@@ -13806,6 +13806,7 @@ arguments[4][40][0].apply(exports,arguments)
 arguments[4][41][0].apply(exports,arguments)
 },{"dup":41}],89:[function(require,module,exports){
 var file;
+var roomToJoin;
 
 var io = require('socket.io-client');
 var ss = require('socket.io-stream');
@@ -13822,7 +13823,7 @@ $(document).ready(function() {
     /*
      * Submit message and/or file.
      */
-    $('footer form').submit(function() {
+    $('#chat-wrapper footer form').submit(function() {
         var $message = $.trim($('#message').val());
          
         if ($message) {
@@ -13845,10 +13846,11 @@ $(document).ready(function() {
      * Submit the username and fade out the overlaying #login section.
      * Note: Only fade out an HTML-Element is not best practice, as you can manipulate CSS und HTML via the Browser.
      */
-    $('#login form').submit(function(event) {
+    var $loginForm = $('#login form');
+    $loginForm.submit(function(event) {
         var clickedButtonName = $(this).find("input[type=submit]:focus").attr("name");
         var $username = $.trim($('#username').val());
-        var $password = $.trim($('#password').val());
+        var $password = $('#password').val(); //Its allowed to use whitespaces in the password
         var data = {userName: $username, password: md5($password)}; //Hash the password 
         if ($username && $password) {
             //Determine if the "register" oder the "login" submit button was clicked
@@ -13869,8 +13871,7 @@ $(document).ready(function() {
                     }
                 });    
             }
-            $('#username').val('');
-            $('#password').val('');
+            $loginForm[0].reset();
         } else {
             $('.error').append("Please specify a username and a password.");
         }
@@ -13887,6 +13888,91 @@ $(document).ready(function() {
     $('#file').change(function(e) {
         file = e.target.files[0];
         $('footer > button#button-file > i').css('color', '#FD5F5E');
+    });
+    
+    var $joinRoomDialog = $('#dialog-form').dialog({
+        autoOpen: false,
+        height: 400,
+        width: 350,
+        modal: true,
+        show: 'blind',
+        hide: 'blind',
+        buttons: {
+            "Join room": function() {
+                $joinRoomForm.submit();
+                $joinRoomDialog.dialog('close');
+            },
+                Cancel: function() {
+                $joinRoomDialog.dialog('close');
+            }
+        },
+        close: function() {
+            $('#dialog-form form')[0].reset();
+        }
+    });
+    
+    var $joinRoomForm = $joinRoomDialog.find('form').on('submit', function() {
+        var roomPassword = $joinRoomForm.find('#password').val(); //Its allowed to use whitespaces in the password
+         window.alert(roomPassword);
+        if (roomPassword) {
+            socket.emit('join room', {roomName: roomToJoin, roomPassword: md5(roomPassword)}, function(isJoined) {
+                if (isJoined) {
+                    $('#messages').empty();
+                    $('#rooms .room.current').toggleClass('current');
+                    $('#rooms .room#' + roomToJoin).toggleClass('current');
+                }
+            });
+        }
+        $joinRoomForm[0].reset();
+        return false;
+    });
+    
+    var $createRoomDialog = $('#dialog-create-room').dialog({
+        autoOpen: false,
+        height: 400,
+        width: 350,
+        modal: true,
+        show: 'blind',
+        hide: 'blind',
+        buttons: {
+            "Create room": function() {
+                $createRoomForm.submit();
+                $createRoomDialog.dialog('close');
+            },
+            Cancel: function() {
+                $createRoomDialog.dialog('close');
+            }
+        },
+        close: function() {
+            $('#dialog-form form')[0].reset();
+        }
+    });
+    
+    var $createRoomForm = $createRoomDialog.find('form').on('submit', function() {
+        var roomName = $.trim($('#room-name').val());
+        var roomPassword = $('#room-password').val(); //Its allowed to use whitespaces in the password
+         
+        if (roomName && roomPassword) {
+            socket.emit('create room', {roomName: roomName, roomPassword: md5(roomPassword)});
+        }
+        $createRoomForm[0].reset();
+        return false;
+    });
+    
+    $('#create').on('click', function() {
+        $createRoomDialog.dialog('open');
+    });
+    
+    socket.on('create room', function(roomData) {
+        $('#rooms').append($('<li class="room" id="' + roomData.roomName + '">').text(roomData.roomName)); 
+        //Assign a click handler the the newly created room
+        var $lastCreatedRoom = $('#rooms .room:last-child');
+        $lastCreatedRoom.on('click', function() {
+            roomToJoin = $(this).text();
+            if (roomToJoin !== $('#rooms .room.current').text()) {
+                $joinRoomDialog.dialog('open');   
+            }
+        });
     });
     
     /*
