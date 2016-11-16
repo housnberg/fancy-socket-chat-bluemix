@@ -134,11 +134,11 @@ textarea,
 }
 
 #chat-wrapper footer {
-    width: 79%;
+    width: 80%;
 }
 
 #rooms-wrapper footer {
-    width: 19%;
+    width: 20%;
     right: 0;
 }
 
@@ -342,7 +342,7 @@ border-color: #507299 #507299 transparent transparent;
 }
 
 #rooms .room:not(.current):hover {
-    color: #3DA3A2;
+    color: #EDEEF0;
 }
 
 #rooms .room:last-child {
@@ -351,18 +351,15 @@ border-color: #507299 #507299 transparent transparent;
 
 .room.current {
     font-weight: bold;
-    color: #3DA3A2 !important;
+    font-size: 1.75em;
+    color: #EDEEF0 !important;
     transition: all 0.1s ease-out;
+    margin-left: 15px;
 }
 
 .room.current:before {
-	font-family: 'Material Icons';
-	content: 'arrow forward';
-	-webkit-font-feature-settings: 'liga';
-	-moz-font-feature-settings: 'liga';
-	-o-font-feature-settings: 'liga';
-	font-feature-settings: 'liga';
-	vertical-align: middle;
+    content: '»';
+    margin-right: 15px;
 }
 
 

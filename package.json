@@ -13,7 +13,9 @@
     "socket.io-client": "^1.5.0",
     "socket.io-stream": "^0.9.1",
 	"cloudant": "^1.6.2",
-	"blueimp-md5": "^2.5.0"
+	"blueimp-md5": "^2.5.0",
+	"mkdirp": "^0.5.1",
+	"rmdir": "^1.2.0"
   },
   "repository": {},
   "engines": {

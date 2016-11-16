@@ -64,7 +64,8 @@ io.on('connection', function(socket) {
     socket.join(socket.room);
     //Never ever create rooms statically in the html page.
     //This allows to create the "global" room dynamically.
-    for (var i = 0; i < rooms.length; i++) {
+    socket.emit('create room', {roomName: rooms[0], hasPassword: false});
+    for (var i = 1; i < rooms.length; i++) {
         socket.emit('create room', {roomName: rooms[i]});
     }
     
@@ -98,13 +99,14 @@ io.on('connection', function(socket) {
     /*
      * Handle room creation
      */
-    socket.on('create room', function(roomData) {
+    socket.on('create room', function(roomData, isRoomCreatedFunc) {
         if (rooms.indexOf(roomData.roomName) == -1) {
+            isRoomCreatedFunc(true);
             rooms.push(roomData.roomName);
             roomPasswords.set(roomData.roomName, roomData.roomPassword);
             io.emit('create room', {roomName: roomData.roomName});   
         } else {
-            
+            isRoomCreatedFunc(false);
         } 
     });
     
@@ -112,8 +114,7 @@ io.on('connection', function(socket) {
      * Handle user join room.
      */
     socket.on('join room', function(roomData, isJoinedFunc) {
-       console.log(roomPasswords.get(roomData.roomName) + " " + roomData.roomPassword)
-       if (roomPasswords.get(roomData.roomName) === roomData.roomPassword) {
+       if (roomPasswords.get(roomData.roomName) === roomData.roomPassword || roomData.roomPassword === undefined) {
            isJoinedFunc(true);
            socket.leave(socket.room);
            io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: false});

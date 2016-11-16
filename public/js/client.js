@@ -1,5 +1,7 @@
 var file;
-var roomToJoin;
+//Regex from: http://www.the-art-of-web.com/javascript/validate-password/
+var passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+var passwordInvalidMessage = 'The password should contain at least one number, one lowercase, one uppercase letter and at least six characters';
 
 var io = require('socket.io-client');
 var ss = require('socket.io-stream');
@@ -91,13 +93,17 @@ $(document).ready(function() {
         if (username && password) {
             //Determine if the "register" oder the "login" submit button was clicked
             if (clickedButtonName === "Register") {
-                socket.emit('user registration', data, function(isRegistered) {
-                    if (isRegistered) {
-                        $successMessage.text('The registration was successfull! You can now login with your data.');
-                    } else {
-                        $().addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
-                    }
-                });
+                if (passwordRegex.test(password)) {
+                    socket.emit('user registration', data, function(isRegistered) {
+                        if (isRegistered) {
+                            $successMessage.text('The registration was successfull! You can now login with your data.');
+                        } else {
+                            $().addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
+                        }
+                    });   
+                } else {
+                    $().addValidationMessage(passwordInvalidMessage, $validationMessage);
+                }
             } else {
                 socket.emit('user join', data, function(isJoined) {
                     if (isJoined) {
@@ -151,9 +157,17 @@ $(document).ready(function() {
         var $passwordField = $joinRoomForm.find('#password');
         var roomPassword = $passwordField.val(); //Its allowed to use whitespaces in the password
         var $validationMessage = $joinRoomDialog.find('.validation-message');
+        var $roomToJoinHiddenField = $joinRoomDialog.find('#room-to-join');
+        var roomToJoin = $roomToJoinHiddenField.val();
+        var $hasPasswordHiddenField = $joinRoomDialog.find('#has-password');
+        var hasPassword = $hasPasswordHiddenField.val();
         $().clearValidationMessage($validationMessage, $passwordField);
-        if (roomPassword) {
-            socket.emit('join room', {roomName: roomToJoin, roomPassword: md5(roomPassword)}, function(isJoined) {
+        if (roomPassword || hasPassword === 'false') {
+            var roomData = {roomName: roomToJoin, roomPassword: md5(roomPassword)};
+            if (hasPassword === "false") {
+                roomData.roomPassword = undefined; 
+            }
+            socket.emit('join room', roomData, function(isJoined) {
                 if (isJoined) {
                     $('#messages').empty();
                     $('#rooms .room.current').toggleClass('current');
@@ -163,6 +177,8 @@ $(document).ready(function() {
                     $().addValidationMessage('The password is not correct.', $validationMessage, $passwordField);
                 }
             });
+        } else {
+            $().addValidationMessage('Please specify a password.', $validationMessage, $passwordField);
         }
         $joinRoomForm[0].reset();
         return false;
@@ -206,9 +222,16 @@ $(document).ready(function() {
         if (roomName && roomPassword) {
             if (roomName.length < 3 || roomName.length > 20) {
                 $().addValidationMessage('The length of the roomname must lay between 3 und 20 chars.', $validationMessage, $roomNameField);
+            } else if (passwordRegex.test(roomPassword)) {
+                socket.emit('create room', {roomName: roomName, roomPassword: md5(roomPassword)}, function(isRoomCreated) {
+                    if (isRoomCreated) {
+                        $createRoomDialog.dialog('close');    
+                    } else {
+                        $().addValidationMessage("There is already a room with the name " + roomName, $validationMessage, $roomNameField);
+                    }
+                });
             } else {
-                socket.emit('create room', {roomName: roomName, roomPassword: md5(roomPassword)});
-                $createRoomDialog.dialog('close');
+                $().addValidationMessage(passwordInvalidMessage, $validationMessage);
             }
         } else if (roomName) {
             $().addValidationMessage('Please specify a password.', $validationMessage, $roomPasswordField);
@@ -221,6 +244,9 @@ $(document).ready(function() {
         return false;
     });
     
+    /*
+     * OnClick handler
+     */
     $('#create').on('click', function() {
         $createRoomDialog.dialog('open');
     });
@@ -233,12 +259,23 @@ $(document).ready(function() {
         $('#rooms').append($('<li class="room" id="' + roomData.roomName + '">').text(roomData.roomName)); 
         //Assign a click handler the the newly created room
         var $lastCreatedRoom = $('#rooms .room:last-child');
+        var $firstCreatedRoom = $('#rooms .room:first-child');
+        if ($lastCreatedRoom.text() === $firstCreatedRoom.text()) {
+            $firstCreatedRoom.toggleClass('current');
+        }
         $lastCreatedRoom.on('click', function() {
-            roomToJoin = $(this).text();
+            var roomToJoin = $(this).text();
             if (roomToJoin !== $('#rooms .room.current').text()) {
-                $joinRoomDialog.dialog('open');   
+                $joinRoomDialog.find('#room-to-join').val(roomToJoin);
+                $joinRoomDialog.find('#has-password').val(roomData.hasPassword);
+                if (roomData.hasPassword == false) {
+                    $joinRoomForm.submit();   
+                } else {
+                    $joinRoomDialog.dialog({title: roomData.roomName}).dialog('open');   
+                }
             }
-        });
+        });   
+        
     });
     
     /*
