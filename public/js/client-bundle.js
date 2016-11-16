@@ -14052,7 +14052,7 @@ $(document).ready(function() {
     });
     
     /*
-     * OnClick handler
+     * OnClick handler for room creation.
      */
     $('#create').on('click', function() {
         $createRoomDialog.dialog('open');
@@ -14187,26 +14187,21 @@ $.fn.uploadFile = function() {
     $('#upload').css('width', '0%');
 }
 
-$.fn.addValidationMessage = function(tips, $tipsField, allFields) {
-    $tipsField.text(tips);
+/*
+ * Add a validation message to a JQeury UI Dialog Element and mark the validated vields if any available.
+ */
+$.fn.addValidationMessage = function(validationMessage, $validationMessageField, allFields) {
+    $validationMessageField.text(validationMessage);
     if (allFields !== undefined) {
         allFields.addClass('ui-state-error');
     }
 }
 
-$.fn.clearValidationMessage = function($tipsField, allFields) {
-    $tipsField.empty();
-    if (allFields !== undefined) {
-        allFields.removeClass('ui-state-error');   
-    }
-}
-
-$.fn.addSuccessMessage = function(tips, $tipsField) {
-    $tipsField.text(tips);
-}
-
-$.fn.clearSuccessMessage = function($tipsField) {
-    $tipsField.empty();
+/*
+ * Remove the validation messages from the JQeury UI Dialog Element.
+ */
+$.fn.clearValidationMessage = function($validationMessageField, allFields) {
+    $validationMessageField.empty();
     if (allFields !== undefined) {
         allFields.removeClass('ui-state-error');   
     }

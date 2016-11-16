@@ -1,11 +1,29 @@
 var LOCALE = 'de-DE';
 
 /*
+ * ALlows to stream binary data.
+ */
+var fs = require("fs");
+var ss = require('socket.io-stream');
+var path = require('path');
+
+/*
  * Import of the express module.
  */
 var express = require('express');
 var	app = express();
-var	server = require('http').createServer(app);
+
+/*
+ * options for https-conection
+ */
+const conf = {
+    key : fs.readFileSync('schluessel.key'),
+    cert : fs.readFileSync('zertifikat.pem'),
+    passphrase: 'fancychat'
+};
+
+//var server = require('https').createServer(conf, app); //Use this if you want to run an secured Application in local mode
+var server = require('http').createServer(app);
 var	io = require('socket.io').listen(server);
 
 var cfenv = require('cfenv');
@@ -13,13 +31,6 @@ var appEnv = cfenv.getAppEnv();
 
 // Load the Cloudant library.
 var Cloudant = require('cloudant');
-
-/*
- * ALlows to stream binary data.
- */
-var fs = require("fs");
-var ss = require('socket.io-stream');
-var path = require('path');
 
 /*
  * Decouple the server functionality from the routing functionality.
@@ -47,6 +58,7 @@ var credentials;
 var cloudant;
 var database;
 
+//Query to find a specific user by id
 var userSelector = {
     "selector": {
         "_id": ""
@@ -55,6 +67,7 @@ var userSelector = {
 
 init();
 
+app.enable('trust proxy');
 app.use('/', router);
 
 io.on('connection', function(socket) {
