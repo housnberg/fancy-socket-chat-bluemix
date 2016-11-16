@@ -53,68 +53,7 @@ var userSelector = {
     }  
 };
 
-/*
- * Search for the cloudant service.
- */
-if (process.env.VCAP_SERVICES) {
-	services = JSON.parse(process.env.VCAP_SERVICES);
-
-	var cloudantService = services['cloudantNoSQLDB'];
-	for (var index in cloudantService) {
-		if (cloudantService[index].name === 'cloudant-nosql-db') {
-			credentials = cloudantService[index].credentials;
-		}
-	}
-    cloudant = Cloudant(credentials.url);
-} else {
-	console.log("ERROR: Cloudant Service was not bound! Are you running in local mode?");
-}
-
-if (isServiceAvailable(cloudant)) {
-    database = cloudant.db.use('fancy-socket-chat');
-    if (database === undefined) {
-        console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
-    } else {
-        /*
-        database.insert({_id: 'hans', password: 'wurst' }, function(err, body) {
-            if (!err) {
-                console.log(body)
-            } else {
-                console.log("ERROR: Could not store the values " + err);
-            }
-        });
-
-        database.list(function(err, body) {
-            if (!err) {
-                body.rows.forEach(function(doc) {
-                    console.log(doc);
-                });
-            } else {
-                console.log("ERROR: Could not read the docs.");
-            }
-        });
-        */
-        /*
-        database.index(function(er, result) {
-            if (er) {
-                throw er;
-            }
-
-            console.log('The database has %d indexes', result.indexes.length);
-            for (var i = 0; i < result.indexes.length; i++) {
-                console.log('  %s (%s): %j', result.indexes[i].name, result.indexes[i].type, result.indexes[i].def);
-            }
-
-            result.should.have.a.property('indexes').which.is.an.Array;
-            done();
-        });
-        */
-    }
-
-    cloudant.db.list(function(err, allDbs) {
-      console.log('All my databases: %s', allDbs.join(', '))
-    });
-}
+init();
 
 app.use('/', router);
 
@@ -126,7 +65,7 @@ io.on('connection', function(socket) {
     //Never ever create rooms statically in the html page.
     //This allows to create the "global" room dynamically.
     for (var i = 0; i < rooms.length; i++) {
-        socket.emit('create room', {roomName: rooms[i]});   
+        socket.emit('create room', {roomName: rooms[i]});
     }
     
     /*
@@ -169,6 +108,9 @@ io.on('connection', function(socket) {
         } 
     });
     
+    /*
+     * Handle user join room.
+     */
     socket.on('join room', function(roomData, isJoinedFunc) {
        console.log(roomPasswords.get(roomData.roomName) + " " + roomData.roomPassword)
        if (roomPasswords.get(roomData.roomName) === roomData.roomPassword) {
@@ -180,7 +122,6 @@ io.on('connection', function(socket) {
            io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: true}); 
        } else {
            isJoinedFunc(false);
-           console.log("wrong pas");
        }
     });
     
@@ -256,7 +197,14 @@ io.on('connection', function(socket) {
      */
     socket.on('user list', function () {
         if (isAuthenticated(socket)) {
-            socket.emit('user list', {users: connectedUsers, timeStamp: getTimestamp(true)}); //Send message to me (allows to define different styles)
+            var connectedUsersPerRoom = new Array();
+            //Only send the connected users per room
+            for (var i = 0; i < connectedUsers.length; i++) {
+                if (socket.room === userMap.get(connectedUsers[i]).room) {
+                    connectedUsersPerRoom.push(connectedUsers[i]);
+                }
+            }
+            socket.emit('user list', {users: connectedUsersPerRoom, timeStamp: getTimestamp(true)}); //Send message to me (allows to define different styles)
         }
     });
 
@@ -311,26 +259,39 @@ function isAuthenticated(socket) {
 }
 
 /*
+ * Initialize the application to run on bluemix.
+ */
+function init() {
+    /*
+     * Search for the cloudant service.
+     */
+    if (process.env.VCAP_SERVICES) {
+        services = JSON.parse(process.env.VCAP_SERVICES);
+
+        var cloudantService = services['cloudantNoSQLDB'];
+        for (var index in cloudantService) {
+            if (cloudantService[index].name === 'cloudant-nosql-db') {
+                credentials = cloudantService[index].credentials;
+            }
+        }
+        cloudant = Cloudant(credentials.url);
+    } else {
+        console.log("ERROR: Cloudant Service was not bound! Are you running in local mode?");
+    }
+
+    if (isServiceAvailable(cloudant)) {
+        database = cloudant.db.use('fancy-socket-chat');
+        if (database === undefined) {
+            console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
+        }
+    }
+}
+
+/*
  * Check if a given bluemix service is available.
  */
 function isServiceAvailable(bluemixService) {
     return (bluemixService !== null && bluemixService !== undefined);
-}
-
-function processQuery(selector) {
-    var resultSet = null;
-    if  (isServiceAvailable(cloudant) && selector !== undefined && selector !== null) {
-        database.find(selector, function(error, result) {
-            if (error) {
-                console.log("ERROR: Something went wrong during query procession: " + error);
-            } else {
-                resultSet = result;
-            }
-            //console.log(resultSet.docs[0])
-        });          
-    }
-    console.log(resultSet.docs[0]);
-    return resultSet;
 }
 
 /*
@@ -347,5 +308,5 @@ function getTimestamp(onlyTime) {
 }
 
 server.listen(appEnv.port || config.port, function () {
-    console.log('##### listening on  ' + appEnv.url);
+    console.log('##### Listening on  ' + appEnv.url);
 });

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta charset="utf-8"/>
         <link rel="stylesheet" type="text/css" href="css/style.css">
-        <link rel="stylesheet" type="text/css" href="css/pwdwidget.css">
+        <link rel="stylesheet" type="text/css" href="css/strength.css">
         <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">
         <link href="https://fonts.googleapis.com/css?family=PT+Sans:400,400i" rel="stylesheet">
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -14,40 +14,33 @@
         <script src="js/lib/jquery-3.1.1.js"></script>
         <script src="js/lib/jquery-ui.min.js"></script>
         <script src="js/lib/md5.js"></script>
-        <script src="js/lib/pwdwidget.js"></script>
+        <script src="js/lib/strength.min.js"></script>
         <!-- GENERATED BROWSIFY SCRIPT -->
         <script src="js/client-bundle.js"></script>
     </head><!-- END head -->
     <body>
         <div id="dialog-form" title="RoomName">
-          <form>
-            <fieldset>
-              <label for="password">Password</label>
-              <input type="password" name="password" id="password" value="xxxxxxx" class="text ui-widget-content ui-corner-all">
-              <!-- Allow form submission with keyboard without duplicating the dialog button -->
-              <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
-            </fieldset>
-          </form>
+            <p class="validation-message"></p>
+            <form>
+                <fieldset>
+                    <label for="password">Password</label>
+                    <input type="password" name="password" id="password">
+                    <!-- Allow form submission with keyboard without duplicating the dialog button -->
+                    <!--<input type="submit" tabindex="-1" style="position:absolute; top:-1000px">-->
+                </fieldset>
+            </form>
         </div>
-        <section id="login">
-            <div class="valigner"></div>
-            <div>
-                <div id="login-form-wrapper">
-                    <form id="login-form">
-                        <h1>Username:</h1>
-                        <input type="text" id="username"/>
-                        <br/>
-                        <h1>Password:</h1>
-                        <input type="password" id="password"/>
-                        <br/>
-                        <input id="Login" type="submit" value="Login" name="login"/>
-                        <input id="register" type="submit" value="Register" name="register"/>
-                    </form> <!-- END form -->
-                    <div class="error">
-                    </div>
-                </div>
-            </div>
-        </section><!-- END #login -->
+        <div id="login-dialog" title="Login and Register">
+            <p class="validation-message"></p>
+            <p class="success-message"></p>
+            <form id="login-form">
+                <label>Username:</label>
+                <input type="text" id="username"/>
+                <label>Password:</label>
+                <input type="password" id="password"/>
+                <br/>
+            </form> <!-- END form -->
+        </div> <!-- END #login-dialog -->
         <section id="chat-wrapper">
             <ul id="messages">
             </ul><!-- END #messages -->
@@ -67,12 +60,16 @@
             <ul id="rooms">
             </ul><!-- END #rooms-->
             <footer>
-                <div id="dialog-create-room">
+                <div id="dialog-create-room" title="Create room">
+                    <p class="validation-message"></p>
                     <form id="chat-form">
                         <fieldset id="input-wrapper">
-                            <input type="text" id="room-name" autocomplete="off" placeholder="Room name" />
-                            <input type="password" id="room-password" autocomplete="off" placeholder="Room name" />
-                            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+                            <label>Room name</label>
+                            <input type="text" id="room-name" autocomplete="off" />
+                            <br/>
+                            <label>Password</label>
+                            <input type="password" id="room-password" autocomplete="off" />
+                            <!--<input type="submit" tabindex="-1" style="position:absolute; top:-1000px">-->
                         </fieldset>
                     </form><!-- END form -->
                 </div> <!-- END #dialog-create-room -->

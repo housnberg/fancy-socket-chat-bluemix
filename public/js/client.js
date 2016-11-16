@@ -36,44 +36,6 @@ $(document).ready(function() {
     });
     
     /*
-     * Submit the username and fade out the overlaying #login section.
-     * Note: Only fade out an HTML-Element is not best practice, as you can manipulate CSS und HTML via the Browser.
-     */
-    var $loginForm = $('#login form');
-    $loginForm.submit(function(event) {
-        var clickedButtonName = $(this).find("input[type=submit]:focus").attr("name");
-        var $username = $.trim($('#username').val());
-        var $password = $('#password').val(); //Its allowed to use whitespaces in the password
-        var data = {userName: $username, password: md5($password)}; //Hash the password 
-        if ($username && $password) {
-            //Determine if the "register" oder the "login" submit button was clicked
-            if (clickedButtonName === "register") {
-                socket.emit('user registration', data, function(isRegistered) {
-                    if (isRegistered) {
-                        window.alert("registered");
-                    } else {
-                        $('.error').append("the user with the username '" + $username + "' already exists.");
-                    }
-                });
-            } else {
-                socket.emit('user join', data, function(isJoined) {
-                    if (isJoined) {
-                        $('#login').fadeOut(1000);
-                    } else {
-                        $('.error').append("The username '" + $username + "' doesnt exist or the password is wrong.");
-                    }
-                });    
-            }
-            $loginForm[0].reset();
-        } else {
-            $('.error').append("Please specify a username and a password.");
-        }
-        //Stop browser navigating from page
-        //You could also use event.preventDefault() instead returning false
-        return false;
-    });
-    
-    /*
      * File change listener.
      * Listen if somone selects a file via the filemanager.
      * This function is not called if the user hits "cancel".
@@ -83,36 +45,122 @@ $(document).ready(function() {
         $('footer > button#button-file > i').css('color', '#FD5F5E');
     });
     
-    var $joinRoomDialog = $('#dialog-form').dialog({
-        autoOpen: false,
-        height: 400,
-        width: 350,
+    /*
+     * Create and initialize the login dialog.
+     */ 
+    var $loginDialog = $('#login-dialog').dialog({
+        autoOpen: true,
+        height: 'auto',
+        width: 'auto',
         modal: true,
         show: 'blind',
         hide: 'blind',
+        draggable: false,
+        resizable: false,
+        classes: {
+            "ui-dialog": "ui-dialog ui-dialog-full"
+        },
+        buttons: {
+            "Login": function() {
+                $loginForm.submit();
+            },
+            "Register": function() {
+                $loginForm.submit();
+            }
+        },
+        close: function() {
+            $loginForm[0].reset();
+        }
+    });
+    
+    /*
+     * Handle submission of login data.
+     */
+    var $loginForm = $loginDialog.find('form').on('submit', function() {
+        var clickedButtonName = $('.ui-button:focus').text();
+        var $usernameField = $('#username');
+        var username = $.trim($usernameField.val());
+        var $passwordField = $('#password'); //Its allowed to use whitespaces in the password
+        var password = $passwordField.val(); 
+        var $validationMessage = $loginDialog.find('.validation-message');
+        var $successMessage = $loginDialog.find('.success-message');
+        var $allFields = $([]).add($usernameField).add($passwordField);
+        $().clearValidationMessage($validationMessage, $allFields);
+        $successMessage.empty();
+        var data = {userName: username, password: md5(password)}; //Hash the password 
+        if (username && password) {
+            //Determine if the "register" oder the "login" submit button was clicked
+            if (clickedButtonName === "Register") {
+                socket.emit('user registration', data, function(isRegistered) {
+                    if (isRegistered) {
+                        $successMessage.text('The registration was successfull! You can now login with your data.');
+                    } else {
+                        $().addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
+                    }
+                });
+            } else {
+                socket.emit('user join', data, function(isJoined) {
+                    if (isJoined) {
+                        $loginDialog.dialog('close');
+                    } else {
+                        $().addValidationMessage('The user with the username "' + username + '" does not exist or the password is wrong.', $validationMessage);
+                    }
+                });    
+            }
+            $loginForm[0].reset();
+        } else if (password) {
+            $().addValidationMessage('Please specify a username.', $validationMessage, $usernameField);
+        } else if (username) {
+            $().addValidationMessage('Please specify a password.', $validationMessage, $passwordField);
+        } else {
+            $().addValidationMessage('Pleayse specify a username and a password.', $validationMessage, $allFields);
+        }
+        //Stop browser navigating from page
+        //You could also use event.preventDefault() instead returning false
+        return false;
+    });
+    
+    /* 
+     * Create and initialize Join room dialog via JQuery UI.
+     */
+    var $joinRoomDialog = $('#dialog-form').dialog({
+        autoOpen: false,
+        height: 'auto',
+        width: 'auto',
+        modal: true,
+        show: 'blind',
+        hide: 'blind',
+        resizable: false,
         buttons: {
             "Join room": function() {
                 $joinRoomForm.submit();
-                $joinRoomDialog.dialog('close');
             },
                 Cancel: function() {
                 $joinRoomDialog.dialog('close');
             }
         },
         close: function() {
-            $('#dialog-form form')[0].reset();
+            $joinRoomForm[0].reset();
         }
     });
     
+    /* 
+     * Handle submission of join room form.
+     */
     var $joinRoomForm = $joinRoomDialog.find('form').on('submit', function() {
-        var roomPassword = $joinRoomForm.find('#password').val(); //Its allowed to use whitespaces in the password
-         window.alert(roomPassword);
+        var $passwordField = $joinRoomForm.find('#password');
+        var roomPassword = $passwordField.val(); //Its allowed to use whitespaces in the password
+        var $validationMessage = $joinRoomDialog.find('.validation-message');
+        $().clearValidationMessage($validationMessage, $passwordField);
         if (roomPassword) {
             socket.emit('join room', {roomName: roomToJoin, roomPassword: md5(roomPassword)}, function(isJoined) {
                 if (isJoined) {
                     $('#messages').empty();
                     $('#rooms .room.current').toggleClass('current');
                     $('#rooms .room#' + roomToJoin).toggleClass('current');
+                    $joinRoomDialog.dialog('close');
+                } else {
+                    $().addValidationMessage('The password is not correct.', $validationMessage, $passwordField);
                 }
             });
         }
@@ -120,33 +168,54 @@ $(document).ready(function() {
         return false;
     });
     
+    /* 
+     * Create and initialize Create room dialog via JQuery UI.
+     */
     var $createRoomDialog = $('#dialog-create-room').dialog({
         autoOpen: false,
-        height: 400,
-        width: 350,
+        height: 'auto',
+        width: 'auto',
         modal: true,
         show: 'blind',
         hide: 'blind',
+        resizable: false,
         buttons: {
             "Create room": function() {
                 $createRoomForm.submit();
-                $createRoomDialog.dialog('close');
             },
             Cancel: function() {
                 $createRoomDialog.dialog('close');
             }
         },
         close: function() {
-            $('#dialog-form form')[0].reset();
+            $createRoomForm[0].reset();
         }
     });
     
+    /* 
+     * Handle submission of create room form.
+     */
     var $createRoomForm = $createRoomDialog.find('form').on('submit', function() {
-        var roomName = $.trim($('#room-name').val());
-        var roomPassword = $('#room-password').val(); //Its allowed to use whitespaces in the password
-         
+        var $roomNameField = $('#room-name');
+        var roomName = $.trim($roomNameField.val());
+        var $roomPasswordField = $('#room-password');
+        var roomPassword = $roomPasswordField.val(); //Its allowed to use whitespaces in the password
+        var $allFields = $([]).add($roomNameField).add($roomPasswordField);
+        var $validationMessage = $createRoomDialog.find('.validation-message');
+        $().clearValidationMessage($validationMessage, $allFields);
         if (roomName && roomPassword) {
-            socket.emit('create room', {roomName: roomName, roomPassword: md5(roomPassword)});
+            if (roomName.length < 3 || roomName.length > 20) {
+                $().addValidationMessage('The length of the roomname must lay between 3 und 20 chars.', $validationMessage, $roomNameField);
+            } else {
+                socket.emit('create room', {roomName: roomName, roomPassword: md5(roomPassword)});
+                $createRoomDialog.dialog('close');
+            }
+        } else if (roomName) {
+            $().addValidationMessage('Please specify a password.', $validationMessage, $roomPasswordField);
+        } else if (roomPassword) {
+            $().addValidationMessage('Please specify a room name.', $validationMessage, $roomNameField);
+        } else {
+            $().addValidationMessage('Please specify a room name and a password.', $validationMessage, $allFields);
         }
         $createRoomForm[0].reset();
         return false;
@@ -156,6 +225,10 @@ $(document).ready(function() {
         $createRoomDialog.dialog('open');
     });
     
+    /*
+     * Displays the newly created rooms in a sidebar.
+     * Add a click handler to the last created room. You can then enter a password.
+     */ 
     socket.on('create room', function(roomData) {
         $('#rooms').append($('<li class="room" id="' + roomData.roomName + '">').text(roomData.roomName)); 
         //Assign a click handler the the newly created room
@@ -268,4 +341,29 @@ $.fn.uploadFile = function() {
     file = undefined;
     $('footer > button#button-file > i').css('color', 'black');
     $('#upload').css('width', '0%');
+}
+
+$.fn.addValidationMessage = function(tips, $tipsField, allFields) {
+    $tipsField.text(tips);
+    if (allFields !== undefined) {
+        allFields.addClass('ui-state-error');
+    }
+}
+
+$.fn.clearValidationMessage = function($tipsField, allFields) {
+    $tipsField.empty();
+    if (allFields !== undefined) {
+        allFields.removeClass('ui-state-error');   
+    }
+}
+
+$.fn.addSuccessMessage = function(tips, $tipsField) {
+    $tipsField.text(tips);
+}
+
+$.fn.clearSuccessMessage = function($tipsField) {
+    $tipsField.empty();
+    if (allFields !== undefined) {
+        allFields.removeClass('ui-state-error');   
+    }
 }
