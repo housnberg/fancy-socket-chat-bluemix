@@ -31,6 +31,8 @@ var appEnv = cfenv.getAppEnv();
 
 // Load the Cloudant library.
 var Cloudant = require('cloudant');
+// Load the Watson Visual recognition library
+var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 
 /*
  * Decouple the server functionality from the routing functionality.
@@ -54,8 +56,8 @@ rooms.push("Global");
 var config = require('./config.json');
 
 var services;
-var credentials;
 var cloudant;
+var visualRecognition;
 var database;
 
 //Query to find a specific user by id
@@ -283,12 +285,21 @@ function init() {
         services = JSON.parse(process.env.VCAP_SERVICES);
 
         var cloudantService = services['cloudantNoSQLDB'];
-        for (var index in cloudantService) {
-            if (cloudantService[index].name === 'cloudant-nosql-db') {
-                credentials = cloudantService[index].credentials;
+        for (var service in cloudantService) {
+            if (cloudantService[service].name === 'cloudant-nosql-db') {
+                cloudant = Cloudant(cloudantService[service].credentials.url);
             }
         }
-        cloudant = Cloudant(credentials.url);
+        
+        var visualRecognitionService = services['watson_vision_combined'];
+        for (var service in visualRecognitionService) {
+            if (visualRecognitionService[service].name === 'visual-recognition') {
+                visualRecognition = new VisualRecognitionV3({
+                    api_key: visualRecognitionService[service].credentials.api_key,
+                    version_date: '2016-05-19'
+                });
+            }
+        }
     } else {
         console.log("ERROR: Cloudant Service was not bound! Are you running in local mode?");
     }
