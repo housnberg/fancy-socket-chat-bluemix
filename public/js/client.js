@@ -1,7 +1,11 @@
 var file;
+var avatarAsBase64;
+
 //Regex from: http://www.the-art-of-web.com/javascript/validate-password/
 var passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
 var passwordInvalidMessage = 'The password should contain at least one number, one lowercase, one uppercase letter and at least six characters';
+var roomNameMinLength = 3;
+var roomNameMaxLength = 20;
 
 var io = require('socket.io-client');
 var ss = require('socket.io-stream');
@@ -47,6 +51,48 @@ $(document).ready(function() {
         $('footer > button#button-file > i').css('color', '#FD5F5E');
     });
     
+    $('#file-avatar').change(function(e) {
+        window.alert('yeag');
+        file = e.target.files[0];
+        $().readURL(file, $('img'));
+        file = undefined;
+    });
+    
+    /*
+     * Create and initialize the create picture dialog.
+     */ 
+    var $takePictureDialog = $('#take-picture-dialog').dialog({
+        autoOpen: false,
+        height: 'auto',
+        width: 'auto',
+        modal: true,
+        show: 'blind',
+        hide: 'blind',
+        draggable: false,
+        resizable: false,
+        buttons: {
+            "Snap": function() {
+                $().takePicture($('#canvas'), $('#video'))
+            },
+            "Save": function() {
+                var image = $().convertCanvasToImage($('#canvas'));
+                $('img').attr('src', image.src);
+                $takePictureDialog.dialog('close');
+            },
+            Cancel: function() {
+                $takePictureDialog.dialog('close');
+            }
+        },
+        open: function() {
+            $().showVideo($('#video'));
+        },
+        close: function() {
+            $loginForm[0].reset();
+        }
+    });
+    
+    
+    
     /*
      * Create and initialize the login dialog.
      */ 
@@ -84,12 +130,14 @@ $(document).ready(function() {
         var username = $.trim($usernameField.val());
         var $passwordField = $('#password'); //Its allowed to use whitespaces in the password
         var password = $passwordField.val(); 
+        var $avatar = $('img');
+        var avatarAsBase64 = $avatar.attr('src');
         var $validationMessage = $loginDialog.find('.validation-message');
         var $successMessage = $loginDialog.find('.success-message');
         var $allFields = $([]).add($usernameField).add($passwordField);
         $().clearValidationMessage($validationMessage, $allFields);
         $successMessage.empty();
-        var data = {userName: username, password: md5(password)}; //Hash the password 
+        var data = {userName: username, password: md5(password), avatar: avatarAsBase64}; //Hash the password 
         if (username && password) {
             //Determine if the "register" oder the "login" submit button was clicked
             if (clickedButtonName === "Register") {
@@ -141,7 +189,7 @@ $(document).ready(function() {
             "Join room": function() {
                 $joinRoomForm.submit();
             },
-                Cancel: function() {
+            Cancel: function() {
                 $joinRoomDialog.dialog('close');
             }
         },
@@ -216,11 +264,14 @@ $(document).ready(function() {
         var roomName = $.trim($roomNameField.val());
         var $roomPasswordField = $('#room-password');
         var roomPassword = $roomPasswordField.val(); //Its allowed to use whitespaces in the password
-        var $allFields = $([]).add($roomNameField).add($roomPasswordField);
+        var $masterKeyField = $('#masterkey');
+        var masterKey = $.trim($masterKeyField.val()); //Remove whitespaces
+        
+        var $allFields = $([]).add($roomNameField).add($roomPasswordField).add($masterKeyField);
         var $validationMessage = $createRoomDialog.find('.validation-message');
         $().clearValidationMessage($validationMessage, $allFields);
         if (roomName && roomPassword) {
-            if (roomName.length < 3 || roomName.length > 20) {
+            if (roomName.length < roomNameMinLength || roomName.length > roomNameMinLength) {
                 $().addValidationMessage('The length of the roomname must lay between 3 und 20 chars.', $validationMessage, $roomNameField);
             } else if (passwordRegex.test(roomPassword)) {
                 socket.emit('create room', {roomName: roomName, roomPassword: md5(roomPassword)}, function(isRoomCreated) {
@@ -249,6 +300,10 @@ $(document).ready(function() {
      */
     $('#create').on('click', function() {
         $createRoomDialog.dialog('open');
+    });
+    
+    $('#take-picture').on('click', function() {
+        $takePictureDialog.dialog('open');
     });
     
     /*
@@ -302,7 +357,7 @@ $(document).ready(function() {
         if (data.direct) {
             chatClass += " direct";
         }
-        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="username">').text(data.userName)).append($('<div class="message">').text(data.message).append($('<div class="timestamp">').text(data.timeStamp))));
+        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + avatarAsBase64 + '">'))).append($('<div class="message">').append($('<div>').text(data.userName)).text(data.message).append($('<div class="timestamp">').text(data.timeStamp))));
     });
     
     /*
@@ -312,6 +367,7 @@ $(document).ready(function() {
      */
     socket.on('user join leave', function(data) {
         var userClass = 'left';
+        avatarAsBase64 = data.avatar;
         if (data.isJoined) {
             userClass = 'joined';
         }
@@ -327,7 +383,10 @@ $(document).ready(function() {
         if (data.own) {
             chatClass += " own";
         }
-        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="username">').text(data.userName)).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
+        if (data.direct) {
+            chatClass += " direct";
+        }
+        $('#messages').append($('<li class="' + chatClass + '">').append($('<div class="avatar-wrapper small inline-block">').append($('<img src="' + avatarAsBase64 + '">'))).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
     });
 
     /*
@@ -397,5 +456,43 @@ $.fn.clearValidationMessage = function($validationMessageField, allFields) {
     $validationMessageField.empty();
     if (allFields !== undefined) {
         allFields.removeClass('ui-state-error');   
+    }
+}
+
+$.fn.showVideo = function($video) {
+    var video = $video.get(0); //Play is not a JQuery function
+    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // Not adding `{ audio: true }` since we only want video now
+        navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+            video.src = window.URL.createObjectURL(stream);
+            video.play();
+        });
+    }
+}
+
+$.fn.takePicture = function($canvas, $video) {
+    var canvas = $canvas.get(0);
+    var context = canvas.getContext('2d');
+    var video = $video.get(0);
+    context.drawImage(video, 0, 0, 640, 480);
+}
+
+$.fn.convertCanvasToImage = function($canvas) {
+    var canvas = $canvas.get(0);
+	var image = new Image();
+	image.src = canvas.toDataURL("image/png");
+    
+	return image;
+}
+
+$.fn.readURL = function(input, $avatar) {
+    if (input) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+            $avatar.attr('src', e.target.result);
+        };
+
+        reader.readAsDataURL(input);
     }
 }

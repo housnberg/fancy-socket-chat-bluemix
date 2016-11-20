@@ -29,19 +29,30 @@
                     <input id="has-password" type="hidden" value="true">
                     <!-- Allow form submission with keyboard without duplicating the dialog button -->
                     <!--<input type="submit" tabindex="-1" style="position:absolute; top:-1000px">-->
-                </fieldset>
+                </fieldset> <!-- END fieldset-->
             </form>
+        </div>
+        <div id="take-picture-dialog" title="Take picture">
+            <video id="video" width="640" height="480" autoplay></video>
+            <canvas id="canvas" width="640" height="480"></canvas>
         </div>
         <div id="login-dialog" title="Login and Register">
             <p class="validation-message"></p>
             <p class="success-message"></p>
             <form id="login-form">
-                <label>Username:</label>
+                <label>Username</label>
                 <input type="text" id="username"/>
-                <label>Password:</label>
+                <label>Password</label>
                 <input type="password" id="password"/>
-                <br/>
+                <label>Avatar</label>
+                <div class="avatar-wrapper">
+                    <img src="image/default_avatar.jpg" class="avatar"/>
+                </div>
+                <label>Masterkey</label>
+                <input type="password" id="masterkey"/>
             </form> <!-- END form -->
+            <button id="take-picture">Take picture</button>
+            <input id="file-avatar" type="file" accept=".png, .jpg, .gif"/>
         </div> <!-- END #login-dialog -->
         <section id="chat-wrapper">
             <ul id="messages">

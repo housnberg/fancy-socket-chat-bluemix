@@ -96,7 +96,8 @@ io.on('connection', function(socket) {
                     console.log("ERROR: Something went wrong during query procession: " + error);
                 } else {
                     if (resultSet.docs.length == 0) {
-                        database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password}, function(error, body) {
+                        console.log('###' + data.avatar);
+                        database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatar: data.avatar}, function(error, body) {
                             if (!error) {
                                 isRegisteredFunc(true);
                             } else {
@@ -160,7 +161,8 @@ io.on('connection', function(socket) {
                             isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
                             socket.userName = data.userName; //Assign username to socket so you can use it later
                             connectedUsers.push(data.userName);
-                            io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
+                            socket.avatar = resultSet.docs[0].avatar;
+                            io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true, avatar: resultSet.docs[0].avatar});   
                             userMap.set(socket.userName, socket);
                         } else {
                             isJoinedFunc(false); //Password not correct

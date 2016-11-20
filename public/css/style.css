@@ -110,6 +110,19 @@ textarea,
     color: palegreen;
 }
 
+.avatar-wrapper {
+    width: 125px;
+    height: 125px;
+    margin: 0px auto;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.avatar-wrapper img {
+    height: 100%;
+}
+
+
 /* ==========================================================================
 	CHAT Panel
    ========================================================================== */
@@ -150,6 +163,12 @@ textarea,
     margin: 0;
 }
 
+.avatar-wrapper.small {
+    display: inline-block;
+    float: left;
+    height: 50px;
+    width: 50px;
+}
 
 #rooms-wrapper #rooms {
     width: 100%;
@@ -200,7 +219,7 @@ border-color: #507299 #507299 transparent transparent;
     width: 0;
 	height: 0;
 	left: -9px;
-    top: 10px;
+    top: 25px;
 	border-width: 5px;
 	border-style: solid;
     border-color: #3DA3A2 #3DA3A2 transparent transparent;
@@ -232,6 +251,10 @@ border-color: #507299 #507299 transparent transparent;
 	right: -9px !important;
     left: auto !important;
     border-color: #3DA3A2 transparent transparent #3DA3A2 !important;
+}
+
+.message-wrapper.own .avatar-wrapper.small {
+    float: right;
 }
 
 
