@@ -106,11 +106,19 @@ io.on('connection', function(socket) {
                             url: (appEnv.url + urlSuffix)
                         };
                         
-                        visualRecognition.detectFaces(params, function(err, res) {
+                        visualRecognition.detectFaces(params, function(err, result) {
                             if (err) {
                                 isRegisteredFunc(false, true);
                                 console.log(err);   
                             } else {
+                                
+                                var hasMatch = false;
+                                for (var image in result.images) {
+                                    for (var face in image.faces) {
+                                        console.log("########" + face.gender.gender);
+                                    }
+                                }
+                                
                                 if (false == true) {
                                     
                                 } else {
@@ -121,7 +129,7 @@ io.on('connection', function(socket) {
                                         console.log("ERROR: Could not store the values " + error);
                                     }
                                 });  
-                                    console.log(JSON.stringify(res, null, 2));     
+                                    console.log(JSON.stringify(resuls, null, 2));     
                                 }  
                             }
                         });
