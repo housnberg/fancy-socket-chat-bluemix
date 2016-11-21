@@ -13861,7 +13861,14 @@ $(document).ready(function() {
     $('#file-avatar').change(function(e) {
         window.alert('yeag');
         file = e.target.files[0];
-        $().readURL(file, $('img'));
+        $().readURL(file, $('img'), 275, 275, 50, function(hallo) {
+            var $validationMessage = $loginDialog.find('.validation-message');
+            if (hallo) {
+                $validationMessage.text("");
+            } else {
+                $validationMessage.text("The file is either too large (max 50kb) or too big (width/height max 275px).");
+            }
+        });
         file = undefined;
     });
     
@@ -13949,14 +13956,15 @@ $(document).ready(function() {
             //Determine if the "register" oder the "login" submit button was clicked
             if (clickedButtonName === "Register") {
                 if (passwordRegex.test(password)) {
+                    if (avatarAsBase64.indexOf('base64') != -1) {
+                        data.hasUploadedAvatar = true;
+                    }
                     data.avatar = avatarAsBase64;
                     $successMessage.text('Processing the registration ...');
                     
                     socket.emit('user registration', data, function(isRegistered, faceDoesntMatch) {
                         $successMessage.text('');
                         if (isRegistered) {
-                            
-                            
                             
                             $successMessage.text('The registration was successfull! You can now login with your data.');
                         } else {
@@ -14291,7 +14299,7 @@ $.fn.takePicture = function($canvas, $video) {
     var canvas = $canvas.get(0);
     var context = canvas.getContext('2d');
     var video = $video.get(0);
-    context.drawImage(video, 0, 0, 640, 480);
+    context.drawImage(video, 0, 0, $canvas.attr("width"), $canvas.attr("height"));
 }
 
 $.fn.convertCanvasToImage = function($canvas) {
@@ -14302,12 +14310,23 @@ $.fn.convertCanvasToImage = function($canvas) {
 	return image;
 }
 
-$.fn.readURL = function(input, $avatar) {
+$.fn.readURL = function(input, $avatar, maxWidth, maxHeight, maxFileSize, callback) {
     if (input) {
         var reader = new FileReader();
+        var img = new Image();
+        var fileSize = Math.round(input.size / 1024);
 
         reader.onload = function (e) {
-            $avatar.attr('src', e.target.result);
+            img.src = e.target.result;
+            img.onload = function () {
+                if (this.width > maxWidth ||this.height > maxHeight || fileSize > maxFileSize) {
+                    callback(false);
+                } else {
+                    callback(true);
+                    $avatar.attr('src', img.src);
+                }
+            };
+            
         };
 
         reader.readAsDataURL(input);

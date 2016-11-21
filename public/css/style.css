@@ -492,6 +492,7 @@ footer #clear {
 .ui-dialog {
     border: 0 !important;
     width: auto !important;
+    max-width: 350px;
 }
 
 .ui-dialog-full + .ui-widget-overlay {
