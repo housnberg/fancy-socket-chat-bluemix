@@ -6,6 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "base64-image": "^0.1.0",
     "blueimp-md5": "^2.5.0",
     "cfenv": "^1.0.3",
     "cloudant": "^1.6.2",

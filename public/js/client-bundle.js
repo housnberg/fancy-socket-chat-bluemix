@@ -13949,11 +13949,22 @@ $(document).ready(function() {
             //Determine if the "register" oder the "login" submit button was clicked
             if (clickedButtonName === "Register") {
                 if (passwordRegex.test(password)) {
-                    socket.emit('user registration', data, function(isRegistered) {
+                    
+                    $successMessage.text('Processing the registration ...');
+                    
+                    socket.emit('user registration', data, function(isRegistered, faceDoesntMatch) {
+                        $successMessage.text('');
                         if (isRegistered) {
+                            
+                            
+                            
                             $successMessage.text('The registration was successfull! You can now login with your data.');
                         } else {
-                            $().addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
+                            if (faceDoesntMatch) {
+                                $().addValidationMessage('Either the quality is poor or this is not a face.', $validationMessage);   
+                            } else {
+                                $().addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
+                            }
                         }
                     });   
                 } else {
@@ -14164,7 +14175,7 @@ $(document).ready(function() {
         if (data.direct) {
             chatClass += " direct";
         }
-        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + avatarAsBase64 + '">'))).append($('<div class="message">').append($('<div>').text(data.userName)).text(data.message).append($('<div class="timestamp">').text(data.timeStamp))));
+        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + avatarAsBase64 + '">'))).append($('<div class="message">').text(data.message).append($('<div>').text(data.userName)).append($('<div class="timestamp">').text(data.timeStamp))));
     });
     
     /*
