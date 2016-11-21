@@ -96,12 +96,14 @@ io.on('connection', function(socket) {
                     console.log("ERROR: Something went wrong during query procession: " + error);
                 } else {
                     if (resultSet.docs.length == 0) {
-                    
-                        var ext = base64ImageToFile(data.avatar, './public/image/', ('avatar_' + 'test'));
+                        var fileName = 'avatar_' + data.userName.toLocaleLowerCase();
+                        var filePath = './public/image/';
+                        var ext = base64ImageToFile(data.avatar, filePath, fileName);
+                        var urlSuffix = '/image/' + fileName + '.' + ext;
                         
                         var params = {
                             //images_file: fs.createReadStream('./public/image/avatar_test.' + ext) //Doesn work for some reason
-                            url: appEnv.url + '/image/avatar_test.jpeg'
+                            url: (appEnv.url + urlSuffix)
                         };
                         
                         visualRecognition.detectFaces(params, function(err, res) {
@@ -112,7 +114,7 @@ io.on('connection', function(socket) {
                                 if (false == true) {
                                     
                                 } else {
-                                    database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatar: data.avatar}, function(error, body) {
+                                    database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: urlSuffix}, function(error, body) {
                                     if (!error) {
                                         isRegisteredFunc(true);
                                     } else {
@@ -180,8 +182,8 @@ io.on('connection', function(socket) {
                             isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
                             socket.userName = data.userName; //Assign username to socket so you can use it later
                             connectedUsers.push(data.userName);
-                            socket.avatar = resultSet.docs[0].avatar;
-                            io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true, avatar: resultSet.docs[0].avatar});   
+                            socket.avatarPath = resultSet.docs[0].avatarPath;
+                            io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
                             userMap.set(socket.userName, socket);
                         } else {
                             isJoinedFunc(false); //Password not correct
@@ -209,7 +211,7 @@ io.on('connection', function(socket) {
     */
     socket.on('chat message', function(msg) {
         if (isAuthenticated(socket)) {
-            var data = {userName: socket.userName, message: msg, timeStamp: getTimestamp(true), own: false};
+            var data = {userName: socket.userName, message: msg, timeStamp: getTimestamp(true), own: false, avatar: socket.avatarPath};
             //Broadcast message to all users except me.
             socket.broadcast.to(socket.room).emit('chat message', data);
             data.own = true;
@@ -253,7 +255,7 @@ io.on('connection', function(socket) {
         var message = msg.substr(msg.indexOf(' ') + 1);
         
         var tempSocket = userMap.get(userName);
-        var data = {userName: socket.userName, message: message, timeStamp: getTimestamp(true), own: false, direct: true};
+        var data = {userName: socket.userName, message: message, timeStamp: getTimestamp(true), own: false, direct: true, avatar: socket.avatarPath};
         
         //If socketName is undefined or null there is no user with this name available.
         //Don't allow the send a private message to yourself.
@@ -273,7 +275,7 @@ io.on('connection', function(socket) {
             //Neither "finish", "close" NOR "end" callbacks are working -> BUG
             //We have to emit the Link data althought the data upload is not finished. 
             stream.pipe(fs.createWriteStream(filename));
-            var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: getTimestamp(), userName: socket.userName, own: false};
+            var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: getTimestamp(), userName: socket.userName, own: false, avatar: socket.avatarPath};
             socket.broadcast.to(socket.room).emit('file', newData);
             newData.own = true;
             socket.emit('file', newData);

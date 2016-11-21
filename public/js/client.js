@@ -137,12 +137,12 @@ $(document).ready(function() {
         var $allFields = $([]).add($usernameField).add($passwordField);
         $().clearValidationMessage($validationMessage, $allFields);
         $successMessage.empty();
-        var data = {userName: username, password: md5(password), avatar: avatarAsBase64}; //Hash the password 
+        var data = {userName: username, password: md5(password)}; //Hash the password 
         if (username && password) {
             //Determine if the "register" oder the "login" submit button was clicked
             if (clickedButtonName === "Register") {
                 if (passwordRegex.test(password)) {
-                    
+                    data.avatar = avatarAsBase64;
                     $successMessage.text('Processing the registration ...');
                     
                     socket.emit('user registration', data, function(isRegistered, faceDoesntMatch) {
@@ -368,7 +368,7 @@ $(document).ready(function() {
         if (data.direct) {
             chatClass += " direct";
         }
-        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + avatarAsBase64 + '">'))).append($('<div class="message">').text(data.message).append($('<div>').text(data.userName)).append($('<div class="timestamp">').text(data.timeStamp))));
+        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').text(data.message).append($('<div>').text(data.userName)).append($('<div class="timestamp">').text(data.timeStamp))));
     });
     
     /*
@@ -378,7 +378,6 @@ $(document).ready(function() {
      */
     socket.on('user join leave', function(data) {
         var userClass = 'left';
-        avatarAsBase64 = data.avatar;
         if (data.isJoined) {
             userClass = 'joined';
         }
@@ -397,7 +396,7 @@ $(document).ready(function() {
         if (data.direct) {
             chatClass += " direct";
         }
-        $('#messages').append($('<li class="' + chatClass + '">').append($('<div class="avatar-wrapper small inline-block">').append($('<img src="' + avatarAsBase64 + '">'))).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
+        $('#messages').append($('<li class="' + chatClass + '">').append($('<div class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
     });
 
     /*
