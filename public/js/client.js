@@ -28,6 +28,14 @@ $(document).ready(function() {
         if ($message) {
             if($message === '/users') { //if the message is /users call function to send out the list of current users
                 socket.emit('user list');
+            } else if ($message.startsWith('/generatekey')) {
+                var splittedMessage = $message.split(" ");
+                if (splittedMessage[1] !== undefined && splittedMessage[1] != null) {
+                    var key = splittedMessage[1];
+                    if (passwordRegex.test(key)) {
+                        socket.emit('generate key', key); 
+                    }
+                }
             } else if($message.startsWith('@')) {
                 if ($message.split(" ")[1] !== undefined && $message.split(" ")[1] != null) {
                     socket.emit('direct message', $message);   
@@ -407,6 +415,10 @@ $(document).ready(function() {
         $('#messages').append($('<li class="' + chatClass + '">').append($('<div class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
     });
 
+    socket.on('remove', function() {
+        $('.mng-keys').remove();
+    });
+    
     /*
      * It is difficult to style an input-file type field.
      * This workaround is replacing the input-file type field by a button field providing the same functionality as the input-file type field.

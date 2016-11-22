@@ -129,7 +129,7 @@ io.on('connection', function(socket) {
                                     }
 
                                     if (hasMatch) {
-                                        database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: urlSuffix}, function(error, body) {
+                                        database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: urlSuffix, hasAdminRights: false}, function(error, body) {
                                             if (!error) {
                                                 isRegisteredFunc(true);
                                             } else {
@@ -205,6 +205,9 @@ io.on('connection', function(socket) {
                         isJoinedFunc(false); //Username not correct
                     } else {
                         if (resultSet.docs[0].password === data.password) {
+                            if (resultSet.docs[0].hasAdminRights !== "true") {
+                                socket.emit("remove");
+                            } 
                             isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
                             socket.userName = data.userName; //Assign username to socket so you can use it later
                             connectedUsers.push(data.userName);
@@ -290,6 +293,28 @@ io.on('connection', function(socket) {
             data.own = true;
             socket.emit('chat message', data); //Send message only to me   
         }
+    });
+    
+    socket.on('generate key', function(key) {
+        console.log("#### TEST");
+        userSelector.selector._id = socket.userName.toLocaleLowerCase();
+        database.find(userSelector, function(error, resultSet) {
+            if (error) {
+                
+            } else {
+                if (resultSet.docs[0].hasAdminRights === "true") {
+                    database.insert({_id: key}, function(error, body) {
+                        if (!error) {
+                            //isRegisteredFunc(true);
+                        } else {
+                            console.log("ERROR: Could not store the values " + error);
+                        }
+                    });  
+                } else {
+                    //Callback no admin rights;
+                }
+            }
+        });
     });
     
     /*
