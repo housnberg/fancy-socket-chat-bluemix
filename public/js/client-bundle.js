@@ -14129,11 +14129,74 @@ $(document).ready(function() {
         return false;
     });
     
+    /* 
+     * Create and initialize Create room dialog via JQuery UI.
+     */
+    var $manageKeysDialog = $('#dialog-manage-keys').dialog({
+        autoOpen: false,
+        height: 'auto',
+        width: 'auto',
+        modal: true,
+        show: 'blind',
+        hide: 'blind',
+        resizable: false,
+        buttons: {
+            "Create room": function() {
+                $manageKeysForm.submit();
+            },
+            Cancel: function() {
+                $manageKeysDialog.dialog('close');
+            }
+        },
+        close: function() {
+            $manageKeysForm[0].reset();
+        }
+    });
+    
+    /* 
+     * Handle submission of create room form.
+     */
+    var $manageKeysForm = $manageKeysDialog.find('form').on('submit', function() {
+        var $keyField = $('#key');
+        var key = $.trim($keyField.val());
+        var $ttlField = $("#ttl");
+        var ttl = $ttlField.val();
+        var selectedUnit = $('#unit option:selected').text();
+            
+        var $allFields = $([]).add($keyField);
+        var $validationMessage = $manageKeysDialog.find('.validation-message');
+        $().clearValidationMessage($validationMessage, $allFields);
+        if (key) {
+            if (passwordRegex.test(key)) {
+                socket.emit('generate key', {key: key, ttl: ttl, unit: selectedUnit}, function(keyAlreadyAvailable) {
+                    if (keyAlreadyAvailable) {
+                        $().addValidationMessage("This key is already set.", $validationMessage, $keyField);
+                    } else {
+                        $manageKeysDialog.dialog('close');    
+                    }
+                });
+            } else {
+                $().addValidationMessage(passwordInvalidMessage, $validationMessage, $keyField);
+            }
+        } 
+        $manageKeysForm[0].reset();
+        return false;
+    });
+    
+    $('#unit').selectmenu();
+    
     /*
      * OnClick handler for room creation.
      */
     $('#create').on('click', function() {
         $createRoomDialog.dialog('open');
+    });
+    
+    /*
+     * OnClick handler for room creation.
+     */
+    $('#generate-keys').on('click', function() {
+        $manageKeysDialog.dialog('open');
     });
     
     $('#take-picture').on('click', function() {

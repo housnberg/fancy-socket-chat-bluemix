@@ -68,6 +68,13 @@ var userSelector = {
     }  
 };
 
+//Query to find a specific key by id
+var keySelector = {
+    "selector": {
+        "_id": ""
+    }  
+};
+
 init();
 
 app.enable('trust proxy');
@@ -295,19 +302,20 @@ io.on('connection', function(socket) {
         }
     });
     
-    socket.on('generate key', function(key) {
-        console.log("#### TEST");
+    socket.on('generate key', function(data, callback) {
+        var ttl = parseInt(data.ttl);
+        console.log("######" + ttl);
         userSelector.selector._id = socket.userName.toLocaleLowerCase();
         database.find(userSelector, function(error, resultSet) {
             if (error) {
                 
             } else {
                 if (resultSet.docs[0].hasAdminRights === "true") {
-                    database.insert({_id: key}, function(error, body) {
+                    database.insert({_id: data.key}, function(error, body) {
                         if (!error) {
-                            //isRegisteredFunc(true);
+                            callback(false);
                         } else {
-                            console.log("ERROR: Could not store the values " + error);
+                            callback(true);
                         }
                     });  
                 } else {
@@ -405,6 +413,7 @@ function getTimestamp(onlyTime) {
         return now.toLocaleDateString(LOCALE) + " " + now.toLocaleTimeString(LOCALE);
     }
 }
+
 
 // Grab the extension to resolve any image error
 function base64ImageToFile(base64image, directory, filename) {

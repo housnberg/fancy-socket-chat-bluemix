@@ -86,8 +86,27 @@
                         </fieldset>
                     </form><!-- END form -->
                 </div> <!-- END #dialog-create-room -->
+                <div id="dialog-manage-keys" title="Manage keys">
+                    <p class="validation-message"></p>
+                    <form>
+                        <fieldset>
+                            <label for="key">Key</label>
+                            <input type="text" name="key" id="key">
+                            <label>TTL</label>
+                            <input type="number" id="ttl" min="0" step="1">
+                            <select name="unit" size="4" id="unit">
+                                <option selected="selected">sec</option>
+                                <option>min</option>
+                                <option>hrs</option>
+                                <option>dys</option>
+                            </select>
+                            <!-- Allow form submission with keyboard without duplicating the dialog button -->
+                            <!--<input type="submit" tabindex="-1" style="position:absolute; top:-1000px">-->
+                        </fieldset> <!-- END fieldset-->
+                    </form>
+                </div>
                 <span class="button-wrapper mng-keys" >
-                    <button data-hover="Send" id="key">Mng keys</button>
+                    <button data-hover="Send" id="generate-keys">Mng keys</button>
                 </span>
                 <span class="button-wrapper">
                     <button data-hover="Send" id="create">Create Room</button>

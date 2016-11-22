@@ -516,6 +516,7 @@ fieldset {
 }
 
 .ui-dialog-content input[type='text'], 
+.ui-dialog-content input[type='number'], 
 .ui-dialog-content input[type='email'],
 .ui-dialog-content input[type='password'],
 .ui-dialog-content textarea,
@@ -526,6 +527,10 @@ fieldset {
     font-family: 'PT Sans', sans-serif;
     padding: 5px;
     background: transparent;
+}
+
+.ui-selectmenu-button.ui-button {
+    width: 50px !important;
 }
 
 .ui-state-error {
