@@ -13907,10 +13907,10 @@ $(document).ready(function() {
             }
         },
         open: function() {
-            helper.showVideo($('#video'));
+            helper.startWebcamVideo($('#video'));
         },
         close: function() {
-            $loginForm[0].reset();
+            helper.stopWebcamVideo($('#video'));
         }
     });
     
@@ -14371,15 +14371,22 @@ module.exports = {
         }
     },
 
-    showVideo: function($video) {
+    startWebcamVideo: function($video) {
         var video = $video.get(0); //Play is not a JQuery function
         if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             // Not adding `{ audio: true }` since we only want video now
             navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                localStream = stream;
                 video.src = window.URL.createObjectURL(stream);
                 video.play();
             });
         }
+    },
+    
+    stopWebcamVideo: function($video) {
+        var video = $video.get(0); //Play is not a JQuery function
+        video.pause();
+        localStream.getVideoTracks()[0].stop();
     },
 
     takePicture: function($canvas, $video) {

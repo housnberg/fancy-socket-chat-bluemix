@@ -530,7 +530,12 @@ fieldset {
 }
 
 .ui-selectmenu-button.ui-button {
-    width: 50px !important;
+    width: 100px !important;
+    background: transparent !important;
+    border: 0px !important;
+    border-bottom: 2px solid black !important;
+    border-radius: 0 !important;
+    margin-bottom: 2px!important;
 }
 
 .ui-state-error {

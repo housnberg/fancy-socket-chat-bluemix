@@ -100,10 +100,10 @@ $(document).ready(function() {
             }
         },
         open: function() {
-            helper.showVideo($('#video'));
+            helper.startWebcamVideo($('#video'));
         },
         close: function() {
-            $loginForm[0].reset();
+            helper.stopWebcamVideo($('#video'));
         }
     });
     
