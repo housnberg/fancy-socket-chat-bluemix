@@ -1,4 +1,4 @@
-var LOCALE = 'de-DE';
+var LOCALE = "de-DE";
 
 /*
  * ALlows to stream binary data.
@@ -7,11 +7,8 @@ var fs = require("fs");
 var ss = require('socket.io-stream');
 var path = require('path');
 var bodyParser = require('body-parser');
-var sha256 = require('js-sha256').sha256;
+var helper = require('./helper.js');
 
-/*
- * Import of the express module.
- */
 var express = require('express');
 var	app = express();
 
@@ -99,7 +96,7 @@ io.on('connection', function(socket) {
      * Handle user registration.
      */
     socket.on('user registration', function(data, isRegisteredFunc) {
-        if (isServiceAvailable(cloudant)) {
+        if (helper.isServiceAvailable(cloudant)) {
             userSelector.selector._id = data.userName.toLocaleLowerCase();
             
             database.find(userSelector, function(error, resultSet) {
@@ -108,13 +105,13 @@ io.on('connection', function(socket) {
                 } else {
                     if (resultSet.docs.length == 0) {
                         
-                        var salt = genSalt();
-                        var hashedPassword = hashPassword(data.password, salt);
+                        var salt = helper.generateSalt();
+                        var hashedPassword = helper.hashPassword(data.password, salt);
                         
                         if (data.hasUploadedAvatar) {
                             var fileName = 'avatar_' + data.userName.toLocaleLowerCase();
                             var filePath = './public/image/';
-                            var ext = base64ImageToFile(data.avatar, filePath, fileName);
+                            var ext = helper.base64ImageToFile(data.avatar, filePath, fileName);
                             var urlSuffix = '/image/' + fileName + '.' + ext;
                             
                             var params = {
@@ -182,7 +179,7 @@ io.on('connection', function(socket) {
                     authenticated = false;
                     for (var i = 0; i < resultSet.docs.length; i++) {
                         var salt = resultSet.docs[i].salt;
-                        if (resultSet.docs[i]._id === hashPassword(masterKey, salt)) {
+                        if (resultSet.docs[i]._id === helper.hashPassword(masterKey, salt)) {
                             authenticated = true;
                             break;
                         }
@@ -214,10 +211,10 @@ io.on('connection', function(socket) {
        if (roomPasswords.get(roomData.roomName) === roomData.roomPassword || roomData.roomPassword === undefined) {
            isJoinedFunc(true);
            socket.leave(socket.room);
-           io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: false});
+           io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: helper.getTimestamp(LOCALE), isJoined: false});
            socket.room = roomData.roomName;
            socket.join(socket.room);
-           io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: true}); 
+           io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: helper.getTimestamp(LOCALE), isJoined: true}); 
        } else {
            isJoinedFunc(false);
        }
@@ -228,7 +225,7 @@ io.on('connection', function(socket) {
      */
     socket.on('user join', function(data, isJoinedFunc) {
         
-        if (isServiceAvailable(cloudant)) {
+        if (helper.isServiceAvailable(cloudant)) {
             userSelector.selector._id = data.userName.toLocaleLowerCase();
         
             database.find(userSelector, function(error, resultSet) {
@@ -238,7 +235,7 @@ io.on('connection', function(socket) {
                     if (resultSet.docs.length == 0) {
                         isJoinedFunc(false); //Username not correct
                     } else {
-                        if (resultSet.docs[0].password === hashPassword(data.password, resultSet.docs[0].salt)) {
+                        if (resultSet.docs[0].password === helper.hashPassword(data.password, resultSet.docs[0].salt)) {
                             if (resultSet.docs[0].hasAdminRights !== true) {
                                 socket.emit("remove");
                             } 
@@ -246,7 +243,7 @@ io.on('connection', function(socket) {
                             socket.userName = data.userName; //Assign username to socket so you can use it later
                             connectedUsers.push(data.userName);
                             socket.avatarPath = resultSet.docs[0].avatarPath;
-                            io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
+                            io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: helper.getTimestamp(LOCALE), isJoined: true});   
                             userMap.set(socket.userName, socket);
                         } else {
                             isJoinedFunc(false); //Password not correct
@@ -260,7 +257,7 @@ io.on('connection', function(socket) {
                 isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
                 socket.userName = data.userName; //Assign username to socket so you can use it later
                 connectedUsers.push(data.userName);
-                io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: getTimestamp(), isJoined: true});   
+                io.in(socket.room).emit('user join leave', {userName: data.userName, timeStamp: helper.getTimestamp(LOCALE), isJoined: true});   
                 userMap.set(socket.userName, socket);
             } else {
                 //Indicate that the username is already taken.
@@ -274,7 +271,7 @@ io.on('connection', function(socket) {
     */
     socket.on('chat message', function(msg) {
         if (isAuthenticated(socket)) {
-            var data = {userName: socket.userName, message: msg, timeStamp: getTimestamp(true), own: false, avatar: socket.avatarPath};
+            var data = {userName: socket.userName, message: msg, timeStamp: helper.getTimestamp(LOCALE, true), own: false, avatar: socket.avatarPath};
             //Broadcast message to all users except me.
             socket.broadcast.to(socket.room).emit('chat message', data);
             data.own = true;
@@ -290,7 +287,7 @@ io.on('connection', function(socket) {
         if (isAuthenticated(socket)) {
             var pos = connectedUsers.indexOf(socket.userName);
             connectedUsers.splice(pos, 1);
-            io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: getTimestamp(), isJoined: false});
+            io.in(socket.room).emit('user join leave', {userName: socket.userName, timeStamp: helper.getTimestamp(LOCALE), isJoined: false});
         }
     });
 
@@ -306,7 +303,7 @@ io.on('connection', function(socket) {
                     connectedUsersPerRoom.push(connectedUsers[i]);
                 }
             }
-            socket.emit('user list', {users: connectedUsersPerRoom, timeStamp: getTimestamp(true)}); //Send message to me (allows to define different styles)
+            socket.emit('user list', {users: connectedUsersPerRoom, timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
     });
 
@@ -318,7 +315,7 @@ io.on('connection', function(socket) {
         var message = msg.substr(msg.indexOf(' ') + 1);
         
         var tempSocket = userMap.get(userName);
-        var data = {userName: socket.userName, message: message, timeStamp: getTimestamp(true), own: false, direct: true, avatar: socket.avatarPath};
+        var data = {userName: socket.userName, message: message, timeStamp: helper.getTimestamp(LOCALE, true), own: false, direct: true, avatar: socket.avatarPath};
         
         //If socketName is undefined or null there is no user with this name available.
         //Don't allow the send a private message to yourself.
@@ -348,8 +345,8 @@ io.on('connection', function(socket) {
             } else {
                 if (resultSet.docs[0].hasAdminRights === true) {
                     
-                    var salt = genSalt();
-                    var hashedPassword = hashPassword(data.key, salt);
+                    var salt = helper.generateSalt();
+                    var hashedPassword = helper.hashPassword(data.key, salt);
                     
                     database.insert({_id: hashedPassword, salt: salt, isMasterKey: true}, function(error, body) {
                         if (!error) {
@@ -385,7 +382,7 @@ io.on('connection', function(socket) {
             //Neither "finish", "close" NOR "end" callbacks are working -> BUG
             //We have to emit the Link data althought the data upload is not finished. 
             stream.pipe(fs.createWriteStream(filename));
-            var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: getTimestamp(), userName: socket.userName, own: false, avatar: socket.avatarPath};
+            var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: helper.getTimestamp(LOCALE), userName: socket.userName, own: false, avatar: socket.avatarPath};
             socket.broadcast.to(socket.room).emit('file', newData);
             newData.own = true;
             socket.emit('file', newData);
@@ -437,56 +434,12 @@ function init() {
         console.log("ERROR: Cloudant Service was not bound! Are you running in local mode?");
     }
 
-    if (isServiceAvailable(cloudant)) {
+    if (helper.isServiceAvailable(cloudant)) {
         database = cloudant.db.use('fancy-socket-chat');
         if (database === undefined) {
             console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
         }
     }
-}
-
-/*
- * Check if a given bluemix service is available.
- */
-function isServiceAvailable(bluemixService) {
-    return (bluemixService !== null && bluemixService !== undefined);
-}
-
-/*
- * Returns the Timestamp.
- * If onlyTime is true, this method returns only the current time.
- */
-function getTimestamp(onlyTime) {
-    var now = new Date(Date.now());
-    if (onlyTime) {
-        return now.toLocaleTimeString(LOCALE);  
-    } else {
-        return now.toLocaleDateString(LOCALE) + " " + now.toLocaleTimeString(LOCALE);
-    }
-}
-
-
-// Grab the extension to resolve any image error
-function base64ImageToFile(base64image, directory, filename) {
-    var ext = base64image.split(';')[0].match(/jpeg|png|gif|jpg/)[0];
-    // strip off the data: url prefix to get just the base64-encoded bytes
-    var data = base64image.replace(/^data:image\/\w+;base64,/, "");
-    var buf = new Buffer(data, 'base64');
-    fs.writeFile(directory + filename + '.' + ext, buf);
-    
-    return ext;
-}
-
-//https://codepen.io/Jvsierra/pen/BNbEjW
-function genSalt() {
-    function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-    }
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-}
-
-function hashPassword(password, salt) {
-    return sha256(password + salt);
 }
 
 server.listen(appEnv.port || config.port, function () {
