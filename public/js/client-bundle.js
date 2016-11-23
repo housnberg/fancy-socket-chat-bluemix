@@ -13816,6 +13816,7 @@ var roomNameMaxLength = 20;
 
 var io = require('socket.io-client');
 var ss = require('socket.io-stream');
+var helper = require('./helper.js');
 
 var socket = io.connect();
 
@@ -13869,7 +13870,7 @@ $(document).ready(function() {
     $('#file-avatar').change(function(e) {
         window.alert('yeag');
         file = e.target.files[0];
-        $().readURL(file, $('img'), 275, 275, 50, function(hallo) {
+        helper.readURL(file, $('img'), 275, 275, 50, function(hallo) {
             var $validationMessage = $loginDialog.find('.validation-message');
             if (hallo) {
                 $validationMessage.text("");
@@ -13894,10 +13895,10 @@ $(document).ready(function() {
         resizable: false,
         buttons: {
             "Snap": function() {
-                $().takePicture($('#canvas'), $('#video'))
+                helper.takePicture($('#canvas'), $('#video'))
             },
             "Save": function() {
-                var image = $().convertCanvasToImage($('#canvas'));
+                var image = helper.convertCanvasToImage($('#canvas'));
                 $('img').attr('src', image.src);
                 $takePictureDialog.dialog('close');
             },
@@ -13906,7 +13907,7 @@ $(document).ready(function() {
             }
         },
         open: function() {
-            $().showVideo($('#video'));
+            helper.showVideo($('#video'));
         },
         close: function() {
             $loginForm[0].reset();
@@ -13960,7 +13961,7 @@ $(document).ready(function() {
         var masterKey = $.trim($masterKeyField.val()); //Remove whitespaces
         var $allFields = $([]).add($usernameField).add($passwordField).add($masterKeyField);
         
-        $().clearValidationMessage($validationMessage, $allFields);
+        helper.clearValidationMessage($validationMessage, $allFields);
         $successMessage.empty();
         var data = {userName: username, password: password}; //Hash the password 
         if (username && password) {
@@ -13982,17 +13983,17 @@ $(document).ready(function() {
                                     $successMessage.text('The registration was successfull! You can now login with your data.');
                                 } else {
                                     if (faceDoesntMatch) {
-                                        $().addValidationMessage('Either the quality is poor or this is not a face.', $validationMessage);   
+                                        helper.addValidationMessage('Either the quality is poor or this is not a face.', $validationMessage);   
                                     } else {
-                                        $().addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
+                                        helper.addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
                                     }
                                 }
                             });   
                         } else {
-                            $().addValidationMessage(passwordInvalidMessage, $validationMessage);
+                            helper.addValidationMessage(passwordInvalidMessage, $validationMessage);
                         }    
                    } else {
-                       $().addValidationMessage("The masterkey doesnt exist.", $validationMessage, $masterKeyField);
+                       helper.addValidationMessage("The masterkey doesnt exist.", $validationMessage, $masterKeyField);
                    }
                 });
             } else {
@@ -14000,17 +14001,17 @@ $(document).ready(function() {
                     if (isJoined) {
                         $loginDialog.dialog('close');
                     } else {
-                        $().addValidationMessage('The user with the username "' + username + '" does not exist or the password is wrong.', $validationMessage);
+                        helper.addValidationMessage('The user with the username "' + username + '" does not exist or the password is wrong.', $validationMessage);
                     }
                 });    
             }
             $loginForm[0].reset();
         } else if (password) {
-            $().addValidationMessage('Please specify a username.', $validationMessage, $usernameField);
+            helper.addValidationMessage('Please specify a username.', $validationMessage, $usernameField);
         } else if (username) {
-            $().addValidationMessage('Please specify a password.', $validationMessage, $passwordField);
+            helper.addValidationMessage('Please specify a password.', $validationMessage, $passwordField);
         } else {
-            $().addValidationMessage('Pleayse specify a username and a password.', $validationMessage, $allFields);
+            helper.addValidationMessage('Pleayse specify a username and a password.', $validationMessage, $allFields);
         }
         //Stop browser navigating from page
         //You could also use event.preventDefault() instead returning false
@@ -14052,7 +14053,7 @@ $(document).ready(function() {
         var roomToJoin = $roomToJoinHiddenField.val();
         var $hasPasswordHiddenField = $joinRoomDialog.find('#has-password');
         var hasPassword = $hasPasswordHiddenField.val();
-        $().clearValidationMessage($validationMessage, $passwordField);
+        helper.clearValidationMessage($validationMessage, $passwordField);
         if (roomPassword || hasPassword === 'false') {
             var roomData = {roomName: roomToJoin, roomPassword: roomPassword};
             if (hasPassword === "false") {
@@ -14065,11 +14066,11 @@ $(document).ready(function() {
                     $('#rooms .room#' + roomToJoin).toggleClass('current');
                     $joinRoomDialog.dialog('close');
                 } else {
-                    $().addValidationMessage('The password is not correct.', $validationMessage, $passwordField);
+                    helper.addValidationMessage('The password is not correct.', $validationMessage, $passwordField);
                 }
             });
         } else {
-            $().addValidationMessage('Please specify a password.', $validationMessage, $passwordField);
+            helper.addValidationMessage('Please specify a password.', $validationMessage, $passwordField);
         }
         $joinRoomForm[0].reset();
         return false;
@@ -14110,27 +14111,27 @@ $(document).ready(function() {
         
         var $allFields = $([]).add($roomNameField).add($roomPasswordField);
         var $validationMessage = $createRoomDialog.find('.validation-message');
-        $().clearValidationMessage($validationMessage, $allFields);
+        helper.clearValidationMessage($validationMessage, $allFields);
         if (roomName && roomPassword) {
             if (roomName.length < roomNameMinLength || roomName.length > roomNameMaxLength) {
-                $().addValidationMessage('The length of the roomname must lay between 3 und 20 chars.', $validationMessage, $roomNameField);
+                helper.addValidationMessage('The length of the roomname must lay between 3 und 20 chars.', $validationMessage, $roomNameField);
             } else if (passwordRegex.test(roomPassword)) {
                 socket.emit('create room', {roomName: roomName, roomPassword: roomPassword}, function(isRoomCreated) {
                     if (isRoomCreated) {
                         $createRoomDialog.dialog('close');    
                     } else {
-                        $().addValidationMessage("There is already a room with the name " + roomName, $validationMessage, $roomNameField);
+                        helper.addValidationMessage("There is already a room with the name " + roomName, $validationMessage, $roomNameField);
                     }
                 });
             } else {
-                $().addValidationMessage(passwordInvalidMessage, $validationMessage);
+                helper.addValidationMessage(passwordInvalidMessage, $validationMessage);
             }
         } else if (roomName) {
-            $().addValidationMessage('Please specify a password.', $validationMessage, $roomPasswordField);
+            helper.addValidationMessage('Please specify a password.', $validationMessage, $roomPasswordField);
         } else if (roomPassword) {
-            $().addValidationMessage('Please specify a room name.', $validationMessage, $roomNameField);
+            helper.addValidationMessage('Please specify a room name.', $validationMessage, $roomNameField);
         } else {
-            $().addValidationMessage('Please specify a room name and a password.', $validationMessage, $allFields);
+            helper.addValidationMessage('Please specify a room name and a password.', $validationMessage, $allFields);
         }
         $createRoomForm[0].reset();
         return false;
@@ -14172,18 +14173,18 @@ $(document).ready(function() {
             
         var $allFields = $([]).add($keyField);
         var $validationMessage = $manageKeysDialog.find('.validation-message');
-        $().clearValidationMessage($validationMessage, $allFields);
+        helper.clearValidationMessage($validationMessage, $allFields);
         if (key) {
             if (passwordRegex.test(key)) {
                 socket.emit('generate key', {key: key, ttl: ttl, unit: selectedUnit}, function(keyAlreadyAvailable) {
                     if (keyAlreadyAvailable) {
-                        $().addValidationMessage("This key is already set.", $validationMessage, $keyField);
+                        helper.addValidationMessage("This key is already set.", $validationMessage, $keyField);
                     } else {
                         $manageKeysDialog.dialog('close');    
                     }
                 });
             } else {
-                $().addValidationMessage(passwordInvalidMessage, $validationMessage, $keyField);
+                helper.addValidationMessage(passwordInvalidMessage, $validationMessage, $keyField);
             }
         } 
         $manageKeysForm[0].reset();
@@ -14346,72 +14347,77 @@ $.fn.uploadFile = function() {
     $('#upload').css('width', '0%');
 }
 
-/*
- * Add a validation message to a JQeury UI Dialog Element and mark the validated vields if any available.
- */
-$.fn.addValidationMessage = function(validationMessage, $validationMessageField, allFields) {
-    $validationMessageField.text(validationMessage);
-    if (allFields !== undefined) {
-        allFields.addClass('ui-state-error');
-    }
-}
 
-/*
- * Remove the validation messages from the JQeury UI Dialog Element.
- */
-$.fn.clearValidationMessage = function($validationMessageField, allFields) {
-    $validationMessageField.empty();
-    if (allFields !== undefined) {
-        allFields.removeClass('ui-state-error');   
-    }
-}
+},{"./helper.js":90,"socket.io-client":31,"socket.io-stream":78}],90:[function(require,module,exports){
+module.exports = {
 
-$.fn.showVideo = function($video) {
-    var video = $video.get(0); //Play is not a JQuery function
-    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Not adding `{ audio: true }` since we only want video now
-        navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
-            video.src = window.URL.createObjectURL(stream);
-            video.play();
-        });
-    }
-}
+    /*
+     * Add a validation message to a JQeury UI Dialog Element and mark the validated vields if any available.
+     */
+    addValidationMessage: function(validationMessage, $validationMessageField, allFields) {
+        $validationMessageField.text(validationMessage);
+        if (allFields !== undefined) {
+            allFields.addClass('ui-state-error');
+        }
+    },
 
-$.fn.takePicture = function($canvas, $video) {
-    var canvas = $canvas.get(0);
-    var context = canvas.getContext('2d');
-    var video = $video.get(0);
-    context.drawImage(video, 0, 0, $canvas.attr("width"), $canvas.attr("height"));
-}
+    /*
+     * Remove the validation messages from the JQeury UI Dialog Element.
+     */
+    clearValidationMessage: function($validationMessageField, allFields) {
+        $validationMessageField.empty();
+        if (allFields !== undefined) {
+            allFields.removeClass('ui-state-error');   
+        }
+    },
 
-$.fn.convertCanvasToImage = function($canvas) {
-    var canvas = $canvas.get(0);
-	var image = new Image();
-	image.src = canvas.toDataURL("image/png");
-    
-	return image;
-}
+    showVideo: function($video) {
+        var video = $video.get(0); //Play is not a JQuery function
+        if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Not adding `{ audio: true }` since we only want video now
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                video.src = window.URL.createObjectURL(stream);
+                video.play();
+            });
+        }
+    },
 
-$.fn.readURL = function(input, $avatar, maxWidth, maxHeight, maxFileSize, callback) {
-    if (input) {
-        var reader = new FileReader();
-        var img = new Image();
-        var fileSize = Math.round(input.size / 1024);
+    takePicture: function($canvas, $video) {
+        var canvas = $canvas.get(0);
+        var context = canvas.getContext('2d');
+        var video = $video.get(0);
+        context.drawImage(video, 0, 0, $canvas.attr("width"), $canvas.attr("height"));
+    },
 
-        reader.onload = function (e) {
-            img.src = e.target.result;
-            img.onload = function () {
-                if (this.width > maxWidth ||this.height > maxHeight || fileSize > maxFileSize) {
-                    callback(false);
-                } else {
-                    callback(true);
-                    $avatar.attr('src', img.src);
-                }
+    convertCanvasToImage: function($canvas) {
+        var canvas = $canvas.get(0);
+        var image = new Image();
+        image.src = canvas.toDataURL("image/png");
+
+        return image;
+    },
+
+    readURL: function(input, $avatar, maxWidth, maxHeight, maxFileSize, callback) {
+        if (input) {
+            var reader = new FileReader();
+            var img = new Image();
+            var fileSize = Math.round(input.size / 1024);
+
+            reader.onload = function (e) {
+                img.src = e.target.result;
+                img.onload = function () {
+                    if (this.width > maxWidth ||this.height > maxHeight || fileSize > maxFileSize) {
+                        callback(false);
+                    } else {
+                        callback(true);
+                        $avatar.attr('src', img.src);
+                    }
+                };
+
             };
-            
-        };
 
-        reader.readAsDataURL(input);
+            reader.readAsDataURL(input);
+        }
     }
-}
-},{"socket.io-client":31,"socket.io-stream":78}]},{},[89]);
+};
+},{}]},{},[89]);
