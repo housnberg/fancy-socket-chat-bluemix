@@ -149,36 +149,45 @@ $(document).ready(function() {
         var avatarAsBase64 = $avatar.attr('src');
         var $validationMessage = $loginDialog.find('.validation-message');
         var $successMessage = $loginDialog.find('.success-message');
-        var $allFields = $([]).add($usernameField).add($passwordField);
+        var $masterKeyField = $('#masterkey');
+        var masterKey = $.trim($masterKeyField.val()); //Remove whitespaces
+        var $allFields = $([]).add($usernameField).add($passwordField).add($masterKeyField);
+        
         $().clearValidationMessage($validationMessage, $allFields);
         $successMessage.empty();
         var data = {userName: username, password: md5(password)}; //Hash the password 
         if (username && password) {
             //Determine if the "register" oder the "login" submit button was clicked
+            
             if (clickedButtonName === "Register") {
-                if (passwordRegex.test(password)) {
-                    if (avatarAsBase64.indexOf('base64') != -1) {
-                        data.hasUploadedAvatar = true;
-                    }
-                    data.avatar = avatarAsBase64;
-                    $successMessage.text('Processing the registration ...');
-                    
-                    socket.emit('user registration', data, function(isRegistered, faceDoesntMatch) {
-                        $successMessage.text('');
-                        if (isRegistered) {
-                            
-                            $successMessage.text('The registration was successfull! You can now login with your data.');
-                        } else {
-                            if (faceDoesntMatch) {
-                                $().addValidationMessage('Either the quality is poor or this is not a face.', $validationMessage);   
-                            } else {
-                                $().addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
+                socket.emit('authentication', masterKey, function(isAuthenticated) {
+                    if (isAuthenticated) {
+                        if (passwordRegex.test(password)) {
+                            if (avatarAsBase64.indexOf('base64') != -1) {
+                                data.hasUploadedAvatar = true;
                             }
-                        }
-                    });   
-                } else {
-                    $().addValidationMessage(passwordInvalidMessage, $validationMessage);
-                }
+                            data.avatar = avatarAsBase64;
+                            $successMessage.text('Processing the registration ...');
+
+                            socket.emit('user registration', data, function(isRegistered, faceDoesntMatch) {
+                                $successMessage.text('');
+                                if (isRegistered) {
+                                    $successMessage.text('The registration was successfull! You can now login with your data.');
+                                } else {
+                                    if (faceDoesntMatch) {
+                                        $().addValidationMessage('Either the quality is poor or this is not a face.', $validationMessage);   
+                                    } else {
+                                        $().addValidationMessage('The user with the username "' + username + '" already exists.', $validationMessage);
+                                    }
+                                }
+                            });   
+                        } else {
+                            $().addValidationMessage(passwordInvalidMessage, $validationMessage);
+                        }    
+                   } else {
+                       $().addValidationMessage("The masterkey doesnt exist.", $validationMessage, $masterKeyField);
+                   }
+                });
             } else {
                 socket.emit('user join', data, function(isJoined) {
                     if (isJoined) {
@@ -291,10 +300,8 @@ $(document).ready(function() {
         var roomName = $.trim($roomNameField.val());
         var $roomPasswordField = $('#room-password');
         var roomPassword = $roomPasswordField.val(); //Its allowed to use whitespaces in the password
-        var $masterKeyField = $('#masterkey');
-        var masterKey = $.trim($masterKeyField.val()); //Remove whitespaces
         
-        var $allFields = $([]).add($roomNameField).add($roomPasswordField).add($masterKeyField);
+        var $allFields = $([]).add($roomNameField).add($roomPasswordField);
         var $validationMessage = $createRoomDialog.find('.validation-message');
         $().clearValidationMessage($validationMessage, $allFields);
         if (roomName && roomPassword) {

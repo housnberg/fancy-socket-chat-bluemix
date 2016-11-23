@@ -100,7 +100,7 @@ io.on('connection', function(socket) {
     socket.on('user registration', function(data, isRegisteredFunc) {
         if (isServiceAvailable(cloudant)) {
             userSelector.selector._id = data.userName.toLocaleLowerCase();
-        
+            
             database.find(userSelector, function(error, resultSet) {
                 if (error) {
                     console.log("ERROR: Something went wrong during query procession: " + error);
@@ -166,6 +166,25 @@ io.on('connection', function(socket) {
         }
     });
     
+    socket.on('authentication', function(masterKey, callback) {
+        keySelector.selector._id = masterKey;
+        database.find(keySelector, function(error, resultSet) {
+            if (error) {
+                callback(false);
+            } else {
+                if (resultSet.docs.length == 0) {
+                    callback(false);
+                } else {
+                    if (resultSet.docs[0].isMasterKey === true) {
+                        callback(true);
+                    } else {
+                        callback(false);
+                    }
+                }
+            }
+        });
+    });
+    
     /*
      * Handle room creation
      */
@@ -212,7 +231,7 @@ io.on('connection', function(socket) {
                         isJoinedFunc(false); //Username not correct
                     } else {
                         if (resultSet.docs[0].password === data.password) {
-                            if (resultSet.docs[0].hasAdminRights !== "true") {
+                            if (resultSet.docs[0].hasAdminRights !== true) {
                                 socket.emit("remove");
                             } 
                             isJoinedFunc(true); //Callback function allows you to determine on client side if the username is already assigned to an other user
@@ -304,17 +323,19 @@ io.on('connection', function(socket) {
     
     socket.on('generate key', function(data, callback) {
         var ttl = parseInt(data.ttl);
-        console.log("######" + ttl);
         userSelector.selector._id = socket.userName.toLocaleLowerCase();
         database.find(userSelector, function(error, resultSet) {
             if (error) {
                 
             } else {
-                if (resultSet.docs[0].hasAdminRights === "true") {
-                    database.insert({_id: data.key}, function(error, body) {
+                if (resultSet.docs[0].hasAdminRights === true) {
+                    database.insert({_id: data.key, isMasterKey: true}, function(error, body) {
                         if (!error) {
                             callback(false);
                         } else {
+                            if (!isNaN(ttl)) {
+            
+                            }
                             callback(true);
                         }
                     });  
