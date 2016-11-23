@@ -136,7 +136,7 @@ io.on('connection', function(socket) {
                                     }
 
                                     if (hasMatch) {
-                                        database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: urlSuffix, hasAdminRights: false}, function(error, body) {
+                                        database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: urlSuffix, hasAdminRights: false}, data.userName.toLocaleLowerCase(), function(error, body) {
                                             if (!error) {
                                                 isRegisteredFunc(true);
                                             } else {
@@ -149,7 +149,7 @@ io.on('connection', function(socket) {
                                 }
                             });   
                         } else {
-                            database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: data.avatar}, function(error, body) {
+                            database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: data.avatar}, data.userName.toLocaleLowerCase(), function(error, body) {
                                 if (!error) {
                                     isRegisteredFunc(true);
                                 } else {
@@ -331,11 +331,19 @@ io.on('connection', function(socket) {
                 if (resultSet.docs[0].hasAdminRights === true) {
                     database.insert({_id: data.key, isMasterKey: true}, function(error, body) {
                         if (!error) {
+                            var rev = body.rev;
+                            if (!isNaN(ttl)) {
+                                var timeOut = setTimeout(function(masterKey, rev) {
+                                    database.destroy(masterKey, rev, function(err, body) {
+                                        if (err) {
+                                            console.log("ERROR: " + err);
+                                        }
+                                    });
+                                    clearTimeout(this);
+                                }, ttl, data.key, rev);
+                            }
                             callback(false);
                         } else {
-                            if (!isNaN(ttl)) {
-            
-                            }
                             callback(true);
                         }
                     });  
