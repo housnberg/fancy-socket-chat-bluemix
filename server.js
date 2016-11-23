@@ -7,6 +7,7 @@ var fs = require("fs");
 var ss = require('socket.io-stream');
 var path = require('path');
 var bodyParser = require('body-parser');
+var sha256 = require('js-sha256').sha256;
 
 /*
  * Import of the express module.
@@ -71,7 +72,7 @@ var userSelector = {
 //Query to find a specific key by id
 var keySelector = {
     "selector": {
-        "_id": ""
+        "isMasterKey": true
     }  
 };
 
@@ -106,12 +107,16 @@ io.on('connection', function(socket) {
                     console.log("ERROR: Something went wrong during query procession: " + error);
                 } else {
                     if (resultSet.docs.length == 0) {
+                        
+                        var salt = genSalt();
+                        var hashedPassword = hashPassword(data.password, salt);
+                        
                         if (data.hasUploadedAvatar) {
                             var fileName = 'avatar_' + data.userName.toLocaleLowerCase();
                             var filePath = './public/image/';
                             var ext = base64ImageToFile(data.avatar, filePath, fileName);
                             var urlSuffix = '/image/' + fileName + '.' + ext;
-
+                            
                             var params = {
                                 //images_file: fs.createReadStream('./public/image/avatar_test.' + ext) //Doesn work for some reason
                                 url: (appEnv.url + urlSuffix)
@@ -136,7 +141,7 @@ io.on('connection', function(socket) {
                                     }
 
                                     if (hasMatch) {
-                                        database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: urlSuffix, hasAdminRights: false}, data.userName.toLocaleLowerCase(), function(error, body) {
+                                        database.insert({_id: data.userName.toLocaleLowerCase(), password: hashedPassword, salt: salt, avatarPath: urlSuffix, hasAdminRights: false}, data.userName.toLocaleLowerCase(), function(error, body) {
                                             if (!error) {
                                                 isRegisteredFunc(true);
                                             } else {
@@ -149,7 +154,7 @@ io.on('connection', function(socket) {
                                 }
                             });   
                         } else {
-                            database.insert({_id: data.userName.toLocaleLowerCase(), password: data.password, avatarPath: data.avatar}, data.userName.toLocaleLowerCase(), function(error, body) {
+                            database.insert({_id: data.userName.toLocaleLowerCase(), password: hashedPassword, salt: salt, avatarPath: data.avatar}, data.userName.toLocaleLowerCase(), function(error, body) {
                                 if (!error) {
                                     isRegisteredFunc(true);
                                 } else {
@@ -167,7 +172,6 @@ io.on('connection', function(socket) {
     });
     
     socket.on('authentication', function(masterKey, callback) {
-        keySelector.selector._id = masterKey;
         database.find(keySelector, function(error, resultSet) {
             if (error) {
                 callback(false);
@@ -175,11 +179,15 @@ io.on('connection', function(socket) {
                 if (resultSet.docs.length == 0) {
                     callback(false);
                 } else {
-                    if (resultSet.docs[0].isMasterKey === true) {
-                        callback(true);
-                    } else {
-                        callback(false);
+                    authenticated = false;
+                    for (var i = 0; i < resultSet.docs.length; i++) {
+                        var salt = resultSet.docs[i].salt;
+                        if (resultSet.docs[i]._id === hashPassword(masterKey, salt)) {
+                            authenticated = true;
+                            break;
+                        }
                     }
+                    callback(authenticated);
                 }
             }
         });
@@ -230,7 +238,7 @@ io.on('connection', function(socket) {
                     if (resultSet.docs.length == 0) {
                         isJoinedFunc(false); //Username not correct
                     } else {
-                        if (resultSet.docs[0].password === data.password) {
+                        if (resultSet.docs[0].password === hashPassword(data.password, resultSet.docs[0].salt)) {
                             if (resultSet.docs[0].hasAdminRights !== true) {
                                 socket.emit("remove");
                             } 
@@ -323,13 +331,27 @@ io.on('connection', function(socket) {
     
     socket.on('generate key', function(data, callback) {
         var ttl = parseInt(data.ttl);
+        var unit = data.unit;
         userSelector.selector._id = socket.userName.toLocaleLowerCase();
+        
+        var factor = 1000;
+        
+        if (unit === "mins") {
+            factor = factor * 60;   
+        } else if (unit === "hrs") {
+            factor = factor * 60 * 60;
+        }
+        
         database.find(userSelector, function(error, resultSet) {
             if (error) {
                 
             } else {
                 if (resultSet.docs[0].hasAdminRights === true) {
-                    database.insert({_id: data.key, isMasterKey: true}, function(error, body) {
+                    
+                    var salt = genSalt();
+                    var hashedPassword = hashPassword(data.key, salt);
+                    
+                    database.insert({_id: hashedPassword, salt: salt, isMasterKey: true}, function(error, body) {
                         if (!error) {
                             var rev = body.rev;
                             if (!isNaN(ttl)) {
@@ -340,7 +362,7 @@ io.on('connection', function(socket) {
                                         }
                                     });
                                     clearTimeout(this);
-                                }, ttl, data.key, rev);
+                                }, ttl * factor, hashedPassword, rev);
                             }
                             callback(false);
                         } else {
@@ -455,6 +477,19 @@ function base64ImageToFile(base64image, directory, filename) {
     return ext;
 }
 
+//https://codepen.io/Jvsierra/pen/BNbEjW
+function genSalt() {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
+function hashPassword(password, salt) {
+    return sha256(password + salt);
+}
+
 server.listen(appEnv.port || config.port, function () {
     console.log('##### Listening on  ' + appEnv.url);
 });
+

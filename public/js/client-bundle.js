@@ -13962,7 +13962,7 @@ $(document).ready(function() {
         
         $().clearValidationMessage($validationMessage, $allFields);
         $successMessage.empty();
-        var data = {userName: username, password: md5(password)}; //Hash the password 
+        var data = {userName: username, password: password}; //Hash the password 
         if (username && password) {
             //Determine if the "register" oder the "login" submit button was clicked
             
@@ -14054,7 +14054,7 @@ $(document).ready(function() {
         var hasPassword = $hasPasswordHiddenField.val();
         $().clearValidationMessage($validationMessage, $passwordField);
         if (roomPassword || hasPassword === 'false') {
-            var roomData = {roomName: roomToJoin, roomPassword: md5(roomPassword)};
+            var roomData = {roomName: roomToJoin, roomPassword: roomPassword};
             if (hasPassword === "false") {
                 roomData.roomPassword = undefined; 
             }
@@ -14115,7 +14115,7 @@ $(document).ready(function() {
             if (roomName.length < roomNameMinLength || roomName.length > roomNameMaxLength) {
                 $().addValidationMessage('The length of the roomname must lay between 3 und 20 chars.', $validationMessage, $roomNameField);
             } else if (passwordRegex.test(roomPassword)) {
-                socket.emit('create room', {roomName: roomName, roomPassword: md5(roomPassword)}, function(isRoomCreated) {
+                socket.emit('create room', {roomName: roomName, roomPassword: roomPassword}, function(isRoomCreated) {
                     if (isRoomCreated) {
                         $createRoomDialog.dialog('close');    
                     } else {
@@ -14148,7 +14148,7 @@ $(document).ready(function() {
         hide: 'blind',
         resizable: false,
         buttons: {
-            "Create room": function() {
+            "Create key": function() {
                 $manageKeysForm.submit();
             },
             Cancel: function() {
