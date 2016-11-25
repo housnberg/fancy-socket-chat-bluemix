@@ -122,6 +122,18 @@ textarea,
     height: 100%;
 }
 
+button {
+    -webkit-transition: all 0.1s ease-out;
+    -moz-transition: all 0.1s ease-out;
+    -ms-transition: all 0.1s ease-out;
+    -o-transition: all 0.1s ease-out;
+    transition: all 0.1s ease-out;
+}
+
+button:hover {
+    cursor: pointer;
+    color: red;
+}
 
 /* ==========================================================================
 	CHAT Panel
@@ -467,7 +479,8 @@ footer #create {
     right: 0;
 }
 
-footer button:hover {
+footer button:hover,
+button:hover {
     color: #3DA3A2;
 }
 

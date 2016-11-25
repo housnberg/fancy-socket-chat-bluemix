@@ -14308,6 +14308,16 @@ $(document).ready(function() {
     });
     
     /*
+     * It is difficult to style an input-file type field.
+     * This workaround is replacing the input-file type field by a button field providing the same functionality as the input-file type field.
+     */
+    $('#file-avatar').before('<button id="button-file-avatar"><i class="material-icons">file_upload</i></button>');
+    $('#file-avatar').hide();
+    $('body').on('click', '#button-file-avatar', function() { 
+        $('#file-avatar').trigger('click');    
+    });
+    
+    /*
      * Clear everything if the "X"-Button is clicked.
      */
     $('footer #clear').click(function() {
