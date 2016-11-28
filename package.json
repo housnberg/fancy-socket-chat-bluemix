@@ -18,7 +18,8 @@
     "socket.io-stream": "^0.9.1",
     "watson-developer-cloud": "^2.9.0",
 	"body-parser": "^1.15.2",
-	"js-sha256": "^0.3.2"
+	"js-sha256": "^0.3.2",
+    request: "^2.0"
   },
   "repository": {},
   "engines": {

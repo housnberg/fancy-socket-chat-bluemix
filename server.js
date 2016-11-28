@@ -33,6 +33,9 @@ var Cloudant = require('cloudant');
 // Load the Watson Visual recognition library
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 
+//NEW Load a library for easier http-requesting
+var request = require('request');
+
 /*
  * Decouple the server functionality from the routing functionality.
  * Use routing as an own module.
@@ -445,4 +448,38 @@ function init() {
 server.listen(appEnv.port || config.port, function () {
     console.log('##### Listening on  ' + appEnv.url);
 });
+
+
+//NEW
+   socket.on('weather', function (msg) {
+        if (isAuthenticated(socket)) {
+            console.log(request({
+                url: 'https://twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json;charset=utf-8",
+                    "Accept": "application/json"
+                },
+                qs: qs
+            }, function(err, req, data) {
+                if (err) {
+                    done(err);
+                } else {
+                    if (req.statusCode >= 200 && req.statusCode < 400) {
+                        try {
+                            done(null, JSON.parse(data));
+                        } catch(e) {
+                            console.log(e);
+                            done(e);
+                        }
+                    } else {
+                        console.log(err);
+                        done({ message: req.statusCode, data: data });
+                    }
+                }
+            });)
+            
+            socket.emit('user list', {users: connectedUsersPerRoom, timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
+        }
+    });
 
