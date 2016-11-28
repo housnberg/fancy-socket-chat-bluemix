@@ -29,9 +29,9 @@ $(document).ready(function() {
         if ($message) {
             if($message === '/users') { //if the message is /users call function to send out the list of current users
                 socket.emit('user list');
-            } else if($message === '/weather') { //if the message is /users call function to send out the list of current users
-                socket.emit('user list');
-            } else if ($message.startsWith('/generatekey')) {
+            } else if ($message.startsWith('/weather')) {
+                 socket.emit('weather', $message); 
+            }else if ($message.startsWith('/generatekey')) {
                 var splittedMessage = $message.split(" ");
                 if (splittedMessage[1] !== undefined && splittedMessage[1] != null) {
                     var key = splittedMessage[1];
