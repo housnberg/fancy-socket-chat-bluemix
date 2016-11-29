@@ -34,7 +34,7 @@ var Cloudant = require('cloudant');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 
 //NEW Load a library for easier http-requesting
-var request = require('request');
+//var request = require('request');
 
 /*
  * Decouple the server functionality from the routing functionality.
@@ -449,7 +449,7 @@ server.listen(appEnv.port || config.port, function () {
     console.log('##### Listening on  ' + appEnv.url);
 });
 
-
+/*
 //NEW
    socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
@@ -463,7 +463,7 @@ server.listen(appEnv.port || config.port, function () {
                
             });)
             
-            socket.emit('user list', {users: connectedUsersPerRoom, timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
+            socket.emit('weather', {timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
     });
-
+*/

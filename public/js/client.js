@@ -29,9 +29,9 @@ $(document).ready(function() {
         if ($message) {
             if($message === '/users') { //if the message is /users call function to send out the list of current users
                 socket.emit('user list');
-            } else if ($message.startsWith('/weather')) {
+            } /*else if ($message.startsWith('/weather')) {
                  socket.emit('weather', $message); 
-            }else if ($message.startsWith('/generatekey')) {
+            }*/else if ($message.startsWith('/generatekey')) {
                 var splittedMessage = $message.split(" ");
                 if (splittedMessage[1] !== undefined && splittedMessage[1] != null) {
                     var key = splittedMessage[1];
@@ -551,4 +551,13 @@ $.fn.uploadFile = function() {
     $('footer > button#button-file > i').css('color', 'black');
     $('#upload').css('width', '0%');
 }
-
+/*
+    socket.on('weather', function(data) {
+        console.log('wörks!');
+        /*var $users = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp));
+        for (var i = 0; i < data.users.length; i++) {
+            $users = $users.append($('<div>').text(data.users[i]));
+        }
+        $('#messages').append($users);*/
+    });
+*/
