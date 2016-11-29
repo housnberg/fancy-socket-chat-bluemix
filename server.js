@@ -392,12 +392,27 @@ io.on('connection', function(socket) {
                 if (!error && response.statusCode == 200) {
                     //console.log(body); 
                     var CoordJson = JSON.parse(body);
-                    console.log(JSON.stringify(CoordJson));
+                    
+                    request('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v1/geocode/'+CoordJson.location.latitude[0]+'/'CoordJson.location.longitude[0]'+/forecast/daily/3day.json',function (error1, response1, body1) {
+                        if (!error1 && response1.statusCode == 200) {
+                            console.log("JETZT GILTS!");
+                            console.log(body1); 
+                            
+                        }
+                        else if(error1) {
+                            console.log(error1);
+                        }
+                    }); //END INNER REQUEST
+                    
+                    
+                    
+                    
+                    
                 }
                else if(error) {
                    console.log(error);
                }
-                });
+                });//END OUTER REQUEST
             
             socket.emit('weather', {timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
