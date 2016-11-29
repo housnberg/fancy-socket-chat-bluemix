@@ -390,7 +390,7 @@ io.on('connection', function(socket) {
             console.log("TUT!");
            request('https://twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',function (error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    console.log(response) 
+                    console.log(response); 
                 }
                 });
             
