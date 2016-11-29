@@ -378,7 +378,8 @@ io.on('connection', function(socket) {
     
     socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
-            /*console.log(request({
+            console.log("TUT!");
+            console.log(request({
                 url: 'https://twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',
                 method: "GET",
                 headers: {
@@ -386,13 +387,7 @@ io.on('connection', function(socket) {
                     "Accept": "application/json"
                 }
                
-            }));*/
-            
-           request('https://twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',function (error, response, body) {
-                if (!error && response.statusCode == 200) {
-                    console.log(body) // Show the HTML for the Google homepage.
-                }
-                });
+            }));
             
             socket.emit('weather', {timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
