@@ -378,24 +378,24 @@ io.on('connection', function(socket) {
     
     socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
-            request({
-                url: 'https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',
+            /*console.log(request({
+                url: 'https://twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json;charset=utf-8",
                     "Accept": "application/json"
                 }
                
-            }, function(error, response, body){
-                    if(error) {
-                        console.log("???????????????");
-                        console.log(error);
-                    } else {
-                        console.log("tut auch!");
-                        console.log(response.statusCode, body);
-                    }
-            });
-            
+            }));*/
+            console.log("TUT!");
+           request('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    console.log(response); 
+                }
+               else if(error) {
+                   console.log(error);
+               }
+                });
             
             socket.emit('weather', {timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
