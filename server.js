@@ -390,6 +390,7 @@ io.on('connection', function(socket) {
                     if(error) {
                         console.log(error);
                     } else {
+                        console.log("tut auch!");
                         console.log(response.statusCode, body);
                     }
             });
