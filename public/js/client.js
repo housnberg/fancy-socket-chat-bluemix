@@ -493,13 +493,13 @@ $(document).ready(function() {
     });
     
     
-        socket.on('weather', function(data) {
+    socket.on('weather', function(data) {
         console.log('wörks!');
         /*var $users = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp));
         for (var i = 0; i < data.users.length; i++) {
-            $users = $users.append($('<div>').text(data.users[i]));
+        $users = $users.append($('<div>').text(data.users[i]));
         }
-        $('#messages').append($users);
+        $('#messages').append($users);*/
     });
     
     
