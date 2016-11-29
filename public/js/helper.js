@@ -58,12 +58,28 @@ module.exports = {
             var reader = new FileReader();
             var img = new Image();
             var fileSize = Math.round(input.size / 1024);
+            var canvas = document.createElement('canvas');
 
             reader.onload = function (e) {
                 img.src = e.target.result;
                 img.onload = function () {
-                    if (this.width > maxWidth ||this.height > maxHeight || fileSize > maxFileSize) {
-                        callback(false);
+                    var imgWidth = this.width;
+                    var imgHeight = this.height;
+                    if (imgWidth > maxWidth || imgHeight > maxHeight || fileSize > maxFileSize) {
+                        canvas.width = maxWidth;
+                        canvas.height = maxHeight;
+                        
+                        var ratio = scalePreserveAspectRatio(imgWidth, imgHeight, maxWidth, maxHeight);
+                        
+                        canvas.width = imgWidth * ratio;
+                        canvas.height = imgHeight * ratio;
+                        
+                        var context = canvas.getContext('2d');
+                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        $avatar.attr('src', canvas.toDataURL("image/png"));
+                        callback(true);
+                        
                     } else {
                         callback(true);
                         $avatar.attr('src', img.src);
@@ -74,5 +90,10 @@ module.exports = {
 
             reader.readAsDataURL(input);
         }
-    }
+    },
+    
+};
+
+function scalePreserveAspectRatio(imgW,imgH,maxW,maxH) {
+    return (Math.min((maxW/imgW),(maxH/imgH)));
 };
