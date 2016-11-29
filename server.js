@@ -449,7 +449,7 @@ server.listen(appEnv.port || config.port, function () {
     console.log('##### Listening on  ' + appEnv.url);
 });
 
-/*
+
 //NEW
    socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
@@ -461,9 +461,9 @@ server.listen(appEnv.port || config.port, function () {
                     "Accept": "application/json"
                 }
                
-            });)
+            }));
             
             socket.emit('weather', {timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
     });
-*/
+
