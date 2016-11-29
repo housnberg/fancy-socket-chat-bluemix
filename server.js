@@ -390,7 +390,9 @@ io.on('connection', function(socket) {
             console.log("TUT!");
            request('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',function (error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    console.log(body); 
+                    //console.log(body); 
+                    var CoordJson = JSON.parse(body);
+                    console.log(JSON.stringify(CoordJson));
                 }
                else if(error) {
                    console.log(error);
