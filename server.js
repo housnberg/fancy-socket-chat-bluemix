@@ -379,7 +379,7 @@ io.on('connection', function(socket) {
     socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
             request({
-                url: 'https://twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',
+                url: 'https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json;charset=utf-8",
