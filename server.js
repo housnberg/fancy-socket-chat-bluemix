@@ -376,23 +376,7 @@ io.on('connection', function(socket) {
         });
     });
     
-    /*
-     * Handle submission of a file.
-     */
-    ss(socket).on('file', function(stream, data) {
-        if (isAuthenticated(socket)) {
-            var filename = config.filePath + path.basename(data.fileName);
-            //Neither "finish", "close" NOR "end" callbacks are working -> BUG
-            //We have to emit the Link data althought the data upload is not finished. 
-            stream.pipe(fs.createWriteStream(filename));
-            var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: helper.getTimestamp(LOCALE), userName: socket.userName, own: false, avatar: socket.avatarPath};
-            socket.broadcast.to(socket.room).emit('file', newData);
-            newData.own = true;
-            socket.emit('file', newData);
-        }
-    });  
-    //NEW
-  socket.on('weather', function (msg) {
+    socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
             /*console.log(request({
                 url: 'https://twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',
@@ -413,6 +397,24 @@ io.on('connection', function(socket) {
             socket.emit('weather', {timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
     });
+    
+    /*
+     * Handle submission of a file.
+     */
+    ss(socket).on('file', function(stream, data) {
+        if (isAuthenticated(socket)) {
+            var filename = config.filePath + path.basename(data.fileName);
+            //Neither "finish", "close" NOR "end" callbacks are working -> BUG
+            //We have to emit the Link data althought the data upload is not finished. 
+            stream.pipe(fs.createWriteStream(filename));
+            var newData = {filePath: config.filePath, fileName: data.fileName, timeStamp: helper.getTimestamp(LOCALE), userName: socket.userName, own: false, avatar: socket.avatarPath};
+            socket.broadcast.to(socket.room).emit('file', newData);
+            newData.own = true;
+            socket.emit('file', newData);
+        }
+    });  
+    //NEW
+  
     
 });
 
