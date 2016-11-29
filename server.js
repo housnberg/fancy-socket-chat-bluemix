@@ -34,7 +34,7 @@ var Cloudant = require('cloudant');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 
 //NEW Load a library for easier http-requesting
-//var request = require('request');
+var request = require('request');
 
 /*
  * Decouple the server functionality from the routing functionality.
