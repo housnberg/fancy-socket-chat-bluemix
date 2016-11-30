@@ -496,7 +496,7 @@ $(document).ready(function() {
     socket.on('weather', function(data) {
         var $text = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp));
         
-        $text = $text.append($('<div>').text(data.weather));
+        $text = $text.append($('<div>').text(JSON.stringify(data.weather));
         $('#messages').append($text);
     });
     
