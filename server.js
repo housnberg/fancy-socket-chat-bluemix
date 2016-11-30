@@ -379,7 +379,7 @@ io.on('connection', function(socket) {
     
     socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
-            var city = $.trim(msg.replace("/weather", ""));
+            var city = msg.replace("/weather", "").trim();
             console.log(city);
             var CoordJson;
             var weatherJson;
