@@ -382,7 +382,6 @@ io.on('connection', function(socket) {
             var city = msg.replace("/weather", "").trim();
             var CoordJson;
             var weatherJson;
-            var locationJson;
             /*
             * getting the coordinates of the entered city
             */
@@ -390,7 +389,6 @@ io.on('connection', function(socket) {
                 if (!error && response.statusCode == 200) {
                     console.log(body); 
                     CoordJson = JSON.parse(body);
-                    locationJson = CoordJson.location;
                     console.log(CoordJson.location.latitude[0]);
                     console.log(CoordJson.location.longitude[0]);
                 }
@@ -399,10 +397,10 @@ io.on('connection', function(socket) {
                }
                 });//END COORDINATE-REQUEST*/
             
-            request1('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v1/geocode/'+locationJson.latitude[0]+'/'+locationJson.longitude[0]+'/forecast/daily/3day.json',function (error1, response1, body1) {
+            request1('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v1/geocode/'+CoordJson.location.latitude[0]+'/'+CoordJson.location.longitude[0]+'/forecast/daily/3day.json',function (error1, response1, body1) {
                         if (!error1 && response1.statusCode == 200) {
-                            console.log(body1);
-                            weatherJson = JSON.parse(body1);
+                    
+                           weatherJson = JSON.parse(body1);
                             
                         }
                         else if(error1) {
