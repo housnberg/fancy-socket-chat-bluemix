@@ -379,36 +379,30 @@ io.on('connection', function(socket) {
     
     socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
-            /*console.log(request({
-                url: 'https://twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json;charset=utf-8",
-                    "Accept": "application/json"
-                }
-               
-            }));*/
+            
+            var CoordJson;
             console.log("TUT!");
-          /* request('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',function (error, response, body) {
+           request('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     //console.log(body); 
-                    var CoordJson = JSON.parse(body);
+                    CoordJson = JSON.parse(body);
+                    console.log(JSON.stringify(CoordJson['location']);
                 }
                else if(error) {
                    console.log(error);
                }
-                });//END OUTER REQUEST*/
+                });//END COORDINATE-REQUEST*/
             
             request1('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v1/geocode/33.40/-83.42/forecast/daily/3day.json',function (error1, response1, body1) {
                         if (!error1 && response1.statusCode == 200) {
                             console.log("JETZT GILTS!");
-                            console.log(body1); 
+                           // console.log(body1); 
                             
                         }
                         else if(error1) {
                             console.log(error1);
                         }
-                    }); //END INNER REQUEST
+                    }); //END WEATHER-REQUEST
             
             socket.emit('weather', {timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
