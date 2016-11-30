@@ -396,16 +396,13 @@ io.on('connection', function(socket) {
                     console.log(CoordJson.location.longitude[0]);
                     latitudeVar = CoordJson.location.latitude[0];
                     longitudeVar = CoordJson.location.longitude[0];
-                    
-                    console.log(latitudeVar);
-                    console.log(longitudeVar);
                 }
                else if(error) {
                    console.log(error);
                }
                 });//END COORDINATE-REQUEST*/
             
-            request1('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v1/geocode/'+latitudeVar+'/'+longitudeVar+'/forecast/daily/3day.json',function (error1, response1, body1) {
+            request1('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v1/geocode/33.40/-83.42/forecast/daily/3day.json',function (error1, response1, body1) {
                         if (!error1 && response1.statusCode == 200) {
                             console.log(body1);
                            weatherJson = JSON.parse(body1);
