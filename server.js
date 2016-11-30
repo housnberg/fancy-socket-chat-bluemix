@@ -1,4 +1,4 @@
-var LOCALE = "de-DE";
+const LOCALE = "de-DE";
 
 /*
  * ALlows to stream binary data.
@@ -37,6 +37,7 @@ var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3'
 var request = require('request');
 
 var weatherUrl;
+var supportedWeatherLocations;
 
 /*
  * Decouple the server functionality from the routing functionality.
@@ -278,10 +279,21 @@ io.on('connection', function(socket) {
         if (isAuthenticated(socket)) {
             var data = {userName: socket.userName, message: msg, timeStamp: helper.getTimestamp(LOCALE, true), own: false, avatar: socket.avatarPath};
             //Broadcast message to all users except me.
-            socket.broadcast.to(socket.room).emit('chat message', data);
-            data.own = true;
-            //Send message only to me   
-            socket.emit('chat message', data);
+            checkSupportedWeatherLocations(msg, function(error, cities) {
+                if (!error) {
+                        requestWeather(cities[0], function(error, weatherData) {
+                           if (!error) {
+                               weatherData.city = cities[0];
+                               data.wertherData = weatherData;
+                               emitMessage(socket, data);
+                           } else {
+                               console.log("the city doesnt exist");
+                           }
+                        });    
+                } else {
+                    emitMessage(socket, data);
+                }
+            });
         }
     });
 
@@ -325,7 +337,7 @@ io.on('connection', function(socket) {
         //If socketName is undefined or null there is no user with this name available.
         //Don't allow the send a private message to yourself.
         if (tempSocket !== undefined && tempSocket != null && tempSocket != socket) {
-            tempSocket.emit('chat message', data); //Broadcast message to all users except me.
+            tempSocket.emit('chat message', data); //Broadcast message to direct user
             data.own = true;
             socket.emit('chat message', data); //Send message only to me   
         }
@@ -385,27 +397,7 @@ io.on('connection', function(socket) {
             /*
             * getting the coordinates of the entered city
             */
-            request(weatherUrl + '/api/weather/v3/location/search?query=' + city + '&language=en-US', function (error, response, locationData) {
-                console.log("LOCATION STATUS: " + response.statusCode);
-                if (!error && response.statusCode == 200) {
-                    console.log(locationData);
-                    locationData = JSON.parse(locationData);
-                    request(weatherUrl + '/api/weather/v1/geocode/' + locationData.location.latitude[0] + '/' + locationData.location.longitude[0] + '/forecast/hourly/48hour.json', function (error, response, weatherData) {
-                        console.log("WEATHER STATUS: " + response.statusCode);
-                        if (!error && response.statusCode == 200) {
-                            console.log(weatherData);
-                            weatherData = JSON.parse(weatherData);
-                            socket.emit('weather', {weather: weatherData, timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define 
-                        } else if(error) {
-                            console.log(error);
-                        }
-                    }); //END WEATHER-REQUEST
-                } else if(error) {
-                    console.log(error);
-                } else {
-                    //Handle point doesnt exist
-                }
-            });//END COORDINATE-REQUEST*/
+            
         }
     });
     
@@ -486,6 +478,8 @@ function init() {
             console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
         }
     }
+    
+    
 }
 
 server.listen(appEnv.port || config.port, function () {
@@ -493,5 +487,54 @@ server.listen(appEnv.port || config.port, function () {
 });
 
 
+function emitMessage(socket, data) {
+    socket.broadcast.to(socket.room).emit('chat message', data);
+    data.own = true;
+    //Send message only to me   
+    socket.emit('chat message', data);    
+}
 
 
+function checkSupportedWeatherLocations(message, callback) {
+    var weatherSelector = {
+        "selector": {
+            "_id": "supportedWeatherLocations"
+        }  
+    };
+    database.find(weatherSelector, function(error, resultSet) {
+        console.log(resultSet);
+        if (!error) {
+            var cities = resultSet.docs[0].cities;
+            var availableCities = new Array();
+            for (var i = 0; i < cities.length; i++) {
+                var index = message.toLocaleLowerCase().indexOf(cities[i].toLocaleLowerCase());
+                if (index != -1) {
+                    availableCities.push(cities[i]);
+                }   
+            }
+            if (availableCities.length == 0) {
+                callback(true);   
+            } else {
+                callback(false, availableCities, index);
+            }
+        }
+    });
+} 
+
+function requestWeather(city, callback) {
+    request(weatherUrl + '/api/weather/v3/location/search?query=' + city + '&language=en-US', function (error, response, locationData) {
+        if (!error && response.statusCode == 200) {
+            locationData = JSON.parse(locationData);
+            request(weatherUrl + '/api/weather/v1/geocode/' + locationData.location.latitude[0] + '/' + locationData.location.longitude[0] + '/forecast/hourly/48hour.json', function (error, response, weatherData) {
+                if (!error && response.statusCode == 200) {
+                    weatherData = JSON.parse(weatherData);
+                    callback(false, weatherData);
+                } else {
+                     callback(true);
+                }
+            }); //END WEATHER-REQUEST
+        } else {
+            callback(true);
+        }
+    });//END COORDINATE-REQUEST*/  
+}

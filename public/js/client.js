@@ -457,7 +457,34 @@ $(document).ready(function() {
         if (data.direct) {
             chatClass += " direct";
         }
-        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').text(data.message).append($('<div>').text(data.userName)).append($('<div class="timestamp">').text(data.timeStamp))));
+        
+        var iconCode = "";
+        var isWeatherData = "";
+        var temp = "";
+        var feelsLike = "";
+        var phrase32char = "";
+        var city = "";
+        if (data.wertherData !== undefined) {
+            var currentForecast = data.wertherData.forecasts[0];
+            iconCode = currentForecast.icon_code;
+            temp = helper.fahrenheitToCelsius(currentForecast.temp);
+            feelsLike = helper.fahrenheitToCelsius(currentForecast.feels_like);
+            phrase32char = currentForecast.phrase_32char;
+            city = data.wertherData.city;
+            
+            isWeatherData = 'is-weather-data=""';
+        }
+        
+        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message" icon-code="' + iconCode + '"' + isWeatherData + ' temp="' + temp + '" feels-like="' + feelsLike + '" desc="' + phrase32char + '" city="' + city + '">').text(data.message).append($('<div>').text(data.userName)).append($('<div class="timestamp">').append($('<i>').text("TEST")).text(data.timeStamp))));
+        $(document).tooltip({
+            items: '[is-weather-data]',
+            track: true,
+            content: function() {
+                var $element = $(this);
+                if ($element.is('[is-weather-data]'))
+                return '<ul><li> City: ' + $element.attr('city') + '</li><li> Temperature: ' + $element.attr('temp') + ' °C</li><li> Feels like: ' + $element.attr('feels-like') + ' °C</li><li> Description: ' + $element.attr('desc') + '</li></ul><img class="weater-icon" src="/image/weather_icons/' + $element.attr('icon-code') + '.png">';
+            }
+        });
     });
     
     /*

@@ -92,6 +92,10 @@ module.exports = {
         }
     },
     
+    fahrenheitToCelsius: function(fahrenheit) {
+        return (parseFloat(fahrenheit) - 32) / 1.8;
+    }
+    
 };
 
 function scalePreserveAspectRatio(imgW,imgH,maxW,maxH) {
