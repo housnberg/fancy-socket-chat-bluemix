@@ -405,7 +405,7 @@ io.on('connection', function(socket) {
                         }
                     }); //END WEATHER-REQUEST
             
-            socket.emit('weather', {timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
+            socket.emit('weather', {weather: weatherJson, timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define different styles)
         }
     });
     

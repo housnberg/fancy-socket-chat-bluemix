@@ -14335,12 +14335,10 @@ $(document).ready(function() {
     
     
     socket.on('weather', function(data) {
-        console.log('wörks!');
-        /*var $users = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp));
-        for (var i = 0; i < data.users.length; i++) {
-        $users = $users.append($('<div>').text(data.users[i]));
-        }
-        $('#messages').append($users);*/
+        var $text = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp));
+        
+        $text = $text.append($('<div>').text(data.weather));
+        $('#messages').append($text);
     });
     
     
