@@ -35,7 +35,8 @@ var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3'
 
 //NEW Load a library for easier http-requesting
 var request = require('request');
-var request1 = require('request');
+
+var weatherUrl;
 
 /*
  * Decouple the server functionality from the routing functionality.
@@ -380,40 +381,31 @@ io.on('connection', function(socket) {
     socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
             var city = msg.replace("/weather", "").trim();
-            var CoordJson;
-            var weatherJson;
-            var latitudeVar;
-            var longitudeVar;
             console.log(city);
             /*
             * getting the coordinates of the entered city
             */
-           request('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query='+city+'&language=en-US',function (error, response, body) {
+            request(weatherUrl + '/api/weather/v3/location/search?query=' + city + '&language=en-US', function (error, response, locationData) {
+                console.log("LOCATION STATUS: " + response.statusCode);
                 if (!error && response.statusCode == 200) {
-                    console.log(body); 
-                    CoordJson = JSON.parse(body);
-                    console.log(CoordJson.location.latitude[0]);
-                    console.log(CoordJson.location.longitude[0]);
-                    latitudeVar = CoordJson.location.latitude[0];
-                    longitudeVar = CoordJson.location.longitude[0];
-                }
-               else if(error) {
-                   console.log(error);
-               }
-                });//END COORDINATE-REQUEST*/
-            
-            request1('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v1/geocode/33.40/-83.42/forecast/daily/3day.json',function (error1, response1, body1) {
-                        if (!error1 && response1.statusCode == 200) {
-                            console.log(body1);
-                           
-                            socket.emit('weather', {weather: body1, timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define 
-                        }
-                        else if(error1) {
-                            console.log(error1);
+                    console.log(locationData);
+                    locationData = JSON.parse(locationData);
+                    request(weatherUrl + '/api/weather/v1/geocode/' + locationData.location.latitude[0] + '/' + locationData.location.longitude[0] + '/forecast/hourly/48hour.json', function (error, response, weatherData) {
+                        console.log("WEATHER STATUS: " + response.statusCode);
+                        if (!error && response.statusCode == 200) {
+                            console.log(weatherData);
+                            weatherData = JSON.parse(weatherData);
+                            socket.emit('weather', {weather: weatherData, timeStamp: helper.getTimestamp(LOCALE, true)}); //Send message to me (allows to define 
+                        } else if(error) {
+                            console.log(error);
                         }
                     }); //END WEATHER-REQUEST
-            
-            different styles)
+                } else if(error) {
+                    console.log(error);
+                } else {
+                    //Handle point doesnt exist
+                }
+            });//END COORDINATE-REQUEST*/
         }
     });
     
@@ -474,6 +466,14 @@ function init() {
                     api_key: visualRecognitionService[service].credentials.api_key,
                     version_date: '2016-05-20'
                 });
+            }
+        }
+        
+        var weatherCompanyService = services['weatherinsights'];
+        for (var service in weatherCompanyService) {
+            if (weatherCompanyService[service].name === 'Weather Company Data-fw') {
+                weatherUrl = weatherCompanyService[service].credentials.url;
+                console.log(weatherUrl);
             }
         }
     } else {

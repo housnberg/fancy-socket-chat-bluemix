@@ -495,6 +495,8 @@ $(document).ready(function() {
     
     socket.on('weather', function(data) {
         //The weather data are in data.weather but there are trouble to parse them
+        //Only emit the data we are 
+        
         console.log(data.weather.forecasts.night.icon_code);
         var $users = $(('<li class="users">').text('All active users')).append($('<img src="image/weather_icon/'+data.weather.forecasts.night.icon_code+'.png">'));
         
