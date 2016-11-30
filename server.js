@@ -391,6 +391,7 @@ io.on('connection', function(socket) {
                     
                 }
                else if(error) {
+                   console.log("FEHLER");
                    console.log(error);
                }
                 });//END COORDINATE-REQUEST*/
@@ -398,7 +399,7 @@ io.on('connection', function(socket) {
             request1('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v1/geocode/33.40/-83.42/forecast/daily/3day.json',function (error1, response1, body1) {
                         if (!error1 && response1.statusCode == 200) {
                             console.log("JETZT GILTS!");
-                           weatherJson = JOSN.parse(body1);
+                           weatherJson = JSON.parse(body1);
                             
                         }
                         else if(error1) {
