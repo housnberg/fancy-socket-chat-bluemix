@@ -14336,7 +14336,7 @@ $(document).ready(function() {
     
     socket.on('weather', function(data) {
         //The weather data are in data.weather but there are trouble to parse them
-        var $users = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp)).text('HIER MÜSSTE ES GEHEN');
+        var $users = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp)).append($('<img src="../image/PNGs/'+data.weather.forecasts.night.icon_code+'.png"'));
         
         $('#messages').append($users);
     });
