@@ -379,11 +379,12 @@ io.on('connection', function(socket) {
     
     socket.on('weather', function (msg) {
         if (isAuthenticated(socket)) {
-            
+            var city = $.trim(msg.replace("/weather", ""));
+            console.log(city);
             var CoordJson;
             var weatherJson;
             console.log("TUT!");
-           request('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query=Atlanta&language=en-US',function (error, response, body) {
+           request('https://67fb4da6-a49d-4948-b6be-e30e6ec34dfe:UM9EUwX2mJ@twcservice.mybluemix.net/api/weather/v3/location/search?query='+city+'&language=en-US',function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     //console.log(body); 
                     CoordJson = JSON.parse(body);

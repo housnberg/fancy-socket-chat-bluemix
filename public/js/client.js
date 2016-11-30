@@ -494,7 +494,7 @@ $(document).ready(function() {
     
     
     socket.on('weather', function(data) {
-        console.log('wörks!');
+        //The weather data are in data.weather but there are trouble to parse them
         var $users = $('<li class="users">').text('All active users').append($('<span>').text(data.timeStamp)).text('HIER MÜSSTE ES GEHEN');
         
         $('#messages').append($users);
