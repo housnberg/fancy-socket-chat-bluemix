@@ -389,8 +389,8 @@ io.on('connection', function(socket) {
                 if (!error && response.statusCode == 200) {
                     console.log(body); 
                     CoordJson = JSON.parse(body);
-                    console.log(CoordJson.location.latitude);
-                    console.log(CoordJson.location.longitude);
+                    console.log(CoordJson.location.latitude[0]);
+                    console.log(CoordJson.location.longitude[0]);
                 }
                else if(error) {
                    console.log(error);
