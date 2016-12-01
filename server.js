@@ -33,9 +33,6 @@ var Cloudant = require('cloudant');
 // Load the Watson Visual recognition library
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 
-//NEW Load a library for easier http-requesting
-var request = require('request');
-
 var weatherUrl;
 var supportedWeatherLocations;
 
@@ -114,6 +111,7 @@ io.on('connection', function(socket) {
                         var salt = helper.generateSalt();
                         var hashedPassword = helper.hashPassword(data.password, salt);
                         
+                        //Call the visual recognition service only if the user has uploaded an avatar image.
                         if (data.hasUploadedAvatar) {
                             var fileName = 'avatar_' + data.userName.toLocaleLowerCase();
                             var filePath = './public/image/';
@@ -165,7 +163,6 @@ io.on('connection', function(socket) {
                                 }
                             });  
                         }
-                        
                     } else {
                         isRegisteredFunc(false);
                     }   
@@ -174,6 +171,9 @@ io.on('connection', function(socket) {
         }
     });
     
+    /*
+     * Check if the user is authenticated (has a valid masterkey).
+     */
     socket.on('authentication', function(masterKey, callback) {
         database.find(keySelector, function(error, resultSet) {
             if (error) {
@@ -281,7 +281,7 @@ io.on('connection', function(socket) {
             //Broadcast message to all users except me.
             checkSupportedWeatherLocations(msg, function(error, cities) {
                 if (!error) {
-                        requestWeather(cities[0], function(error, weatherData) {
+                        helper.requestWeather(weatherUrl, cities[0], function(error, weatherData) {
                            if (!error) {
                                weatherData.city = cities[0];
                                data.wertherData = weatherData;
@@ -343,6 +343,10 @@ io.on('connection', function(socket) {
         }
     });
     
+    /*
+     * Handle generation of masterkey.
+     * Delete the generated masterkey if you include an expiration date.
+     */
     socket.on('generate key', function(data, callback) {
         var ttl = parseInt(data.ttl);
         var unit = data.unit;
@@ -390,17 +394,6 @@ io.on('connection', function(socket) {
         });
     });
     
-    socket.on('weather', function (msg) {
-        if (isAuthenticated(socket)) {
-            var city = msg.replace("/weather", "").trim();
-            console.log(city);
-            /*
-            * getting the coordinates of the entered city
-            */
-            
-        }
-    });
-    
     /*
      * Handle submission of a file.
      */
@@ -443,7 +436,8 @@ function init() {
      */
     if (process.env.VCAP_SERVICES) {
         services = JSON.parse(process.env.VCAP_SERVICES);
-
+        
+        //Search for available cloudant services.
         var cloudantService = services['cloudantNoSQLDB'];
         for (var service in cloudantService) {
             if (cloudantService[service].name === 'cloudant-nosql-db') {
@@ -451,6 +445,7 @@ function init() {
             }
         }
         
+        //Search for available visual recognition services.
         var visualRecognitionService = services['watson_vision_combined'];
         for (var service in visualRecognitionService) {
             if (visualRecognitionService[service].name === 'visual-recognition') {
@@ -461,6 +456,7 @@ function init() {
             }
         }
         
+        //Search for available weather data services.
         var weatherCompanyService = services['weatherinsights'];
         for (var service in weatherCompanyService) {
             if (weatherCompanyService[service].name === 'Weather Company Data-fw') {
@@ -487,6 +483,9 @@ server.listen(appEnv.port || config.port, function () {
 });
 
 
+/*
+ * Emit chat message data.
+ */
 function emitMessage(socket, data) {
     socket.broadcast.to(socket.room).emit('chat message', data);
     data.own = true;
@@ -494,7 +493,10 @@ function emitMessage(socket, data) {
     socket.emit('chat message', data);    
 }
 
-
+/*
+ * Check if the message string contains locations which are supported to fetch weather data.
+ * Return all cities which are available in the message.
+ */
 function checkSupportedWeatherLocations(message, callback) {
     var weatherSelector = {
         "selector": {
@@ -520,21 +522,3 @@ function checkSupportedWeatherLocations(message, callback) {
         }
     });
 } 
-
-function requestWeather(city, callback) {
-    request(weatherUrl + '/api/weather/v3/location/search?query=' + city + '&language=en-US', function (error, response, locationData) {
-        if (!error && response.statusCode == 200) {
-            locationData = JSON.parse(locationData);
-            request(weatherUrl + '/api/weather/v1/geocode/' + locationData.location.latitude[0] + '/' + locationData.location.longitude[0] + '/forecast/hourly/48hour.json', function (error, response, weatherData) {
-                if (!error && response.statusCode == 200) {
-                    weatherData = JSON.parse(weatherData);
-                    callback(false, weatherData);
-                } else {
-                     callback(true);
-                }
-            }); //END WEATHER-REQUEST
-        } else {
-            callback(true);
-        }
-    });//END COORDINATE-REQUEST*/  
-}

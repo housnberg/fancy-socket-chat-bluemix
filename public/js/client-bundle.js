@@ -2656,10 +2656,6 @@ var processNextTick = require('process-nextick-args');
 var isArray = require('isarray');
 /*</replacement>*/
 
-/*<replacement>*/
-var Duplex;
-/*</replacement>*/
-
 Readable.ReadableState = ReadableState;
 
 /*<replacement>*/
@@ -2707,8 +2703,6 @@ var StringDecoder;
 util.inherits(Readable, Stream);
 
 function prependListener(emitter, event, fn) {
-  // Sadly this is not cacheable as some libraries bundle their own
-  // event emitter implementation with them.
   if (typeof emitter.prependListener === 'function') {
     return emitter.prependListener(event, fn);
   } else {
@@ -2720,6 +2714,7 @@ function prependListener(emitter, event, fn) {
   }
 }
 
+var Duplex;
 function ReadableState(options, stream) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -2789,6 +2784,7 @@ function ReadableState(options, stream) {
   }
 }
 
+var Duplex;
 function Readable(options) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -3111,7 +3107,7 @@ function maybeReadMore_(stream, state) {
 // for virtual (non-string, non-buffer) streams, "length" is somewhat
 // arbitrary, and perhaps not very meaningful.
 Readable.prototype._read = function (n) {
-  this.emit('error', new Error('_read() is not implemented'));
+  this.emit('error', new Error('not implemented'));
 };
 
 Readable.prototype.pipe = function (dest, pipeOpts) {
@@ -3289,16 +3285,16 @@ Readable.prototype.unpipe = function (dest) {
     state.pipesCount = 0;
     state.flowing = false;
 
-    for (var i = 0; i < len; i++) {
-      dests[i].emit('unpipe', this);
+    for (var _i = 0; _i < len; _i++) {
+      dests[_i].emit('unpipe', this);
     }return this;
   }
 
   // try to find the right one.
-  var index = indexOf(state.pipes, dest);
-  if (index === -1) return this;
+  var i = indexOf(state.pipes, dest);
+  if (i === -1) return this;
 
-  state.pipes.splice(index, 1);
+  state.pipes.splice(i, 1);
   state.pipesCount -= 1;
   if (state.pipesCount === 1) state.pipes = state.pipes[0];
 
@@ -3683,6 +3679,7 @@ function Transform(options) {
 
   this._transformState = new TransformState(this);
 
+  // when the writable side finishes, then flush out anything remaining.
   var stream = this;
 
   // start out asking for a readable event once data is transformed.
@@ -3699,10 +3696,9 @@ function Transform(options) {
     if (typeof options.flush === 'function') this._flush = options.flush;
   }
 
-  // When the writable side finishes, then flush out anything remaining.
   this.once('prefinish', function () {
-    if (typeof this._flush === 'function') this._flush(function (er, data) {
-      done(stream, er, data);
+    if (typeof this._flush === 'function') this._flush(function (er) {
+      done(stream, er);
     });else done(stream);
   });
 }
@@ -3723,7 +3719,7 @@ Transform.prototype.push = function (chunk, encoding) {
 // an error, then that'll put the hurt on the whole operation.  If you
 // never call cb(), then you'll never get another chunk.
 Transform.prototype._transform = function (chunk, encoding, cb) {
-  throw new Error('_transform() is not implemented');
+  throw new Error('Not implemented');
 };
 
 Transform.prototype._write = function (chunk, encoding, cb) {
@@ -3753,10 +3749,8 @@ Transform.prototype._read = function (n) {
   }
 };
 
-function done(stream, er, data) {
+function done(stream, er) {
   if (er) return stream.emit('error', er);
-
-  if (data !== null && data !== undefined) stream.push(data);
 
   // if there's nothing in the write buffer, then that means
   // that nothing more will ever be provided
@@ -3785,10 +3779,6 @@ var processNextTick = require('process-nextick-args');
 
 /*<replacement>*/
 var asyncWrite = !process.browser && ['v0.10', 'v0.9.'].indexOf(process.version.slice(0, 5)) > -1 ? setImmediate : processNextTick;
-/*</replacement>*/
-
-/*<replacement>*/
-var Duplex;
 /*</replacement>*/
 
 Writable.WritableState = WritableState;
@@ -3831,6 +3821,7 @@ function WriteReq(chunk, encoding, cb) {
   this.next = null;
 }
 
+var Duplex;
 function WritableState(options, stream) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -3852,7 +3843,6 @@ function WritableState(options, stream) {
   // cast to ints.
   this.highWaterMark = ~ ~this.highWaterMark;
 
-  // drain event flag.
   this.needDrain = false;
   // at the start of calling end()
   this.ending = false;
@@ -3927,7 +3917,7 @@ function WritableState(options, stream) {
   this.corkedRequestsFree = new CorkedRequest(this);
 }
 
-WritableState.prototype.getBuffer = function getBuffer() {
+WritableState.prototype.getBuffer = function writableStateGetBuffer() {
   var current = this.bufferedRequest;
   var out = [];
   while (current) {
@@ -3947,37 +3937,13 @@ WritableState.prototype.getBuffer = function getBuffer() {
   } catch (_) {}
 })();
 
-// Test _writableState for inheritance to account for Duplex streams,
-// whose prototype chain only points to Readable.
-var realHasInstance;
-if (typeof Symbol === 'function' && Symbol.hasInstance && typeof Function.prototype[Symbol.hasInstance] === 'function') {
-  realHasInstance = Function.prototype[Symbol.hasInstance];
-  Object.defineProperty(Writable, Symbol.hasInstance, {
-    value: function (object) {
-      if (realHasInstance.call(this, object)) return true;
-
-      return object && object._writableState instanceof WritableState;
-    }
-  });
-} else {
-  realHasInstance = function (object) {
-    return object instanceof this;
-  };
-}
-
+var Duplex;
 function Writable(options) {
   Duplex = Duplex || require('./_stream_duplex');
 
-  // Writable ctor is applied to Duplexes, too.
-  // `realHasInstance` is necessary because using plain `instanceof`
-  // would return false, as no `_writableState` property is attached.
-
-  // Trying to use the custom `instanceof` for Writable here will also break the
-  // Node.js LazyTransform implementation, which has a non-trivial getter for
-  // `_writableState` that would lead to infinite recursion.
-  if (!realHasInstance.call(Writable, this) && !(this instanceof Duplex)) {
-    return new Writable(options);
-  }
+  // Writable ctor is applied to Duplexes, though they're not
+  // instanceof Writable, they're instanceof Readable.
+  if (!(this instanceof Writable) && !(this instanceof Duplex)) return new Writable(options);
 
   this._writableState = new WritableState(options, this);
 
@@ -4237,7 +4203,7 @@ function clearBuffer(stream, state) {
 }
 
 Writable.prototype._write = function (chunk, encoding, cb) {
-  cb(new Error('_write() is not implemented'));
+  cb(new Error('not implemented'));
 };
 
 Writable.prototype._writev = null;
@@ -13894,7 +13860,7 @@ $(document).ready(function() {
     });
     
     /*
-     * File change listener.
+     * File change listener for uploading an file.
      * Listen if somone selects a file via the filemanager.
      * This function is not called if the user hits "cancel".
      */
@@ -13903,6 +13869,11 @@ $(document).ready(function() {
         $('footer > button#button-file > i').css('color', '#FD5F5E');
     });
     
+    /*
+     * File change listener for uploading an avatar image.
+     * Listen if somone selects a file via the filemanager.
+     * This function is not called if the user hits "cancel".
+     */
     $('#file-avatar').change(function(e) {
         file = e.target.files[0];
         helper.readURL(file, $('img'), 275, 275, 50, function(hallo) {
@@ -13981,6 +13952,7 @@ $(document).ready(function() {
     
     /*
      * Handle submission of login data.
+     * This consists of checking passwords / masterpasswords, etc.
      */
     var $loginForm = $loginDialog.find('form').on('submit', function() {
         var clickedButtonName = $('.ui-button:focus').text();
@@ -14226,6 +14198,9 @@ $(document).ready(function() {
         return false;
     });
     
+    /*
+     * Initialize the JQuery UI selectmenu element.
+     */
     $('#unit').selectmenu();
     
     /*
@@ -14242,6 +14217,9 @@ $(document).ready(function() {
         $manageKeysDialog.dialog('open');
     });
     
+    /*
+     * Open the take picture dialog.
+     */
     $('#take-picture').on('click', function() {
         $takePictureDialog.dialog('open');
     });
@@ -14355,22 +14333,13 @@ $(document).ready(function() {
         $('#messages').append($('<li class="' + chatClass + '">').append($('<div class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
     });
 
+    /*
+     * Remove the manage keys button.
+     * This is useful if the admin has no admin rights.
+     */
     socket.on('remove', function() {
         $('.mng-keys').remove();
     });
-    
-    
-    socket.on('weather', function(data) {
-        //The weather data are in data.weather but there are trouble to parse them
-        //Only emit the data we are 
-        
-        console.log(data.weather.forecasts.night.icon_code);
-        var $users = $(('<li class="users">').text('All active users')).append($('<img src="image/weather_icon/'+data.weather.forecasts.night.icon_code+'.png">'));
-        
-        $('#messages').append($users);
-    });
-    
-    
     
     /*
      * It is difficult to style an input-file type field.
@@ -14436,6 +14405,10 @@ $.fn.uploadFile = function() {
 
 
 },{"./helper.js":90,"socket.io-client":31,"socket.io-stream":78}],90:[function(require,module,exports){
+/*
+ * This helper module should only consist of client-side helper methods.
+ */
+
 module.exports = {
 
     /*
@@ -14458,8 +14431,11 @@ module.exports = {
         }
     },
 
+    /*
+     * Start webcam and stream the data on the given video-html 5 element
+     */
     startWebcamVideo: function($video) {
-        var video = $video.get(0); //Play is not a JQuery function
+        var video = $video.get(0); //Play is not a JQuery function so get the html-dom element
         if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             // Not adding `{ audio: true }` since we only want video now
             navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
@@ -14470,12 +14446,18 @@ module.exports = {
         }
     },
     
+    /*
+     * Stop the webcam and stop the video stream
+     */
     stopWebcamVideo: function($video) {
-        var video = $video.get(0); //Play is not a JQuery function
+        var video = $video.get(0); //Play is not a JQuery function sop get the html-dom element
         video.pause();
         localStream.getVideoTracks()[0].stop();
     },
 
+    /*
+     * Snap a picture and draw the picture from the given video element on the given canvas element.
+     */
     takePicture: function($canvas, $video) {
         var canvas = $canvas.get(0);
         var context = canvas.getContext('2d');
@@ -14483,6 +14465,9 @@ module.exports = {
         context.drawImage(video, 0, 0, $canvas.attr("width"), $canvas.attr("height"));
     },
 
+    /*
+     * Convert the given canvas image to an base64 encoded image.
+     */
     convertCanvasToImage: function($canvas) {
         var canvas = $canvas.get(0);
         var image = new Image();
@@ -14491,6 +14476,10 @@ module.exports = {
         return image;
     },
 
+    /*
+     * Encode an image to its base64 representation.
+     * The image ratio should be conserved!.
+     */
     readURL: function(input, $avatar, maxWidth, maxHeight, maxFileSize, callback) {
         if (input) {
             var reader = new FileReader();
@@ -14530,13 +14519,19 @@ module.exports = {
         }
     },
     
+    /*
+     * Convert fahrenheit to celsius.
+     */
     fahrenheitToCelsius: function(fahrenheit) {
-        return (parseFloat(fahrenheit) - 32) / 1.8;
+        return ((parseFloat(fahrenheit) - 32) / 1.8).toFixed(2);
     }
     
 };
 
-function scalePreserveAspectRatio(imgW,imgH,maxW,maxH) {
-    return (Math.min((maxW/imgW),(maxH/imgH)));
+/*
+ * Calculate the image ratio.
+ */
+function scalePreserveAspectRatio(imgW, imgH, maxW, maxH) {
+    return (Math.min((maxW / imgW), (maxH / imgH)));
 };
 },{}]},{},[89]);

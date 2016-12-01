@@ -4,6 +4,7 @@
 
 var sha256 = require('js-sha256').sha256;
 var fs = require("fs");
+var request = require('request');
 
 module.exports = {
     /*
@@ -33,7 +34,6 @@ module.exports = {
      */
     base64ImageToFile: function(base64image, directory, filename) {
         var ext = base64image.split(';')[0].match(/jpeg|png|gif|jpg/)[0];
-        // strip off the data: url prefix to get just the base64-encoded bytes
         var data = base64image.replace(/^data:image\/\w+;base64,/, "");
         var buf = new Buffer(data, 'base64');
         fs.writeFile(directory + filename + '.' + ext, buf);
@@ -57,5 +57,27 @@ module.exports = {
      */
     hashPassword: function(password, salt) {
         return sha256(password + salt);
+    },
+    
+    /*
+     * Request the weather for a city by calling the weater company service rest api.
+     * Return the weather data (48h forecast) for the city.
+     */
+    requestWeather: function(weatherUrl, city, callback) {
+        request(weatherUrl + '/api/weather/v3/location/search?query=' + city + '&language=en-US', function (error, response, locationData) {
+            if (!error && response.statusCode == 200) {
+                locationData = JSON.parse(locationData);
+                request(weatherUrl + '/api/weather/v1/geocode/' + locationData.location.latitude[0] + '/' + locationData.location.longitude[0] + '/forecast/hourly/48hour.json', function (error, response, weatherData) {
+                    if (!error && response.statusCode == 200) {
+                        weatherData = JSON.parse(weatherData);
+                        callback(false, weatherData);
+                    } else {
+                         callback(true);
+                    }
+                }); //END WEATHER-REQUEST
+            } else {
+                callback(true);
+            }
+        });//END COORDINATE-REQUEST*/  
     }
 };

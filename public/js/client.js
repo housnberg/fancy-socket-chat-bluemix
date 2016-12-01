@@ -53,7 +53,7 @@ $(document).ready(function() {
     });
     
     /*
-     * File change listener.
+     * File change listener for uploading an file.
      * Listen if somone selects a file via the filemanager.
      * This function is not called if the user hits "cancel".
      */
@@ -62,6 +62,11 @@ $(document).ready(function() {
         $('footer > button#button-file > i').css('color', '#FD5F5E');
     });
     
+    /*
+     * File change listener for uploading an avatar image.
+     * Listen if somone selects a file via the filemanager.
+     * This function is not called if the user hits "cancel".
+     */
     $('#file-avatar').change(function(e) {
         file = e.target.files[0];
         helper.readURL(file, $('img'), 275, 275, 50, function(hallo) {
@@ -140,6 +145,7 @@ $(document).ready(function() {
     
     /*
      * Handle submission of login data.
+     * This consists of checking passwords / masterpasswords, etc.
      */
     var $loginForm = $loginDialog.find('form').on('submit', function() {
         var clickedButtonName = $('.ui-button:focus').text();
@@ -385,6 +391,9 @@ $(document).ready(function() {
         return false;
     });
     
+    /*
+     * Initialize the JQuery UI selectmenu element.
+     */
     $('#unit').selectmenu();
     
     /*
@@ -401,6 +410,9 @@ $(document).ready(function() {
         $manageKeysDialog.dialog('open');
     });
     
+    /*
+     * Open the take picture dialog.
+     */
     $('#take-picture').on('click', function() {
         $takePictureDialog.dialog('open');
     });
@@ -514,22 +526,13 @@ $(document).ready(function() {
         $('#messages').append($('<li class="' + chatClass + '">').append($('<div class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
     });
 
+    /*
+     * Remove the manage keys button.
+     * This is useful if the admin has no admin rights.
+     */
     socket.on('remove', function() {
         $('.mng-keys').remove();
     });
-    
-    
-    socket.on('weather', function(data) {
-        //The weather data are in data.weather but there are trouble to parse them
-        //Only emit the data we are 
-        
-        console.log(data.weather.forecasts.night.icon_code);
-        var $users = $(('<li class="users">').text('All active users')).append($('<img src="image/weather_icon/'+data.weather.forecasts.night.icon_code+'.png">'));
-        
-        $('#messages').append($users);
-    });
-    
-    
     
     /*
      * It is difficult to style an input-file type field.

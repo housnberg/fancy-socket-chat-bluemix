@@ -1,3 +1,7 @@
+/*
+ * This helper module should only consist of client-side helper methods.
+ */
+
 module.exports = {
 
     /*
@@ -20,8 +24,11 @@ module.exports = {
         }
     },
 
+    /*
+     * Start webcam and stream the data on the given video-html 5 element
+     */
     startWebcamVideo: function($video) {
-        var video = $video.get(0); //Play is not a JQuery function
+        var video = $video.get(0); //Play is not a JQuery function so get the html-dom element
         if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             // Not adding `{ audio: true }` since we only want video now
             navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
@@ -32,12 +39,18 @@ module.exports = {
         }
     },
     
+    /*
+     * Stop the webcam and stop the video stream
+     */
     stopWebcamVideo: function($video) {
-        var video = $video.get(0); //Play is not a JQuery function
+        var video = $video.get(0); //Play is not a JQuery function sop get the html-dom element
         video.pause();
         localStream.getVideoTracks()[0].stop();
     },
 
+    /*
+     * Snap a picture and draw the picture from the given video element on the given canvas element.
+     */
     takePicture: function($canvas, $video) {
         var canvas = $canvas.get(0);
         var context = canvas.getContext('2d');
@@ -45,6 +58,9 @@ module.exports = {
         context.drawImage(video, 0, 0, $canvas.attr("width"), $canvas.attr("height"));
     },
 
+    /*
+     * Convert the given canvas image to an base64 encoded image.
+     */
     convertCanvasToImage: function($canvas) {
         var canvas = $canvas.get(0);
         var image = new Image();
@@ -53,6 +69,10 @@ module.exports = {
         return image;
     },
 
+    /*
+     * Encode an image to its base64 representation.
+     * The image ratio should be conserved!.
+     */
     readURL: function(input, $avatar, maxWidth, maxHeight, maxFileSize, callback) {
         if (input) {
             var reader = new FileReader();
@@ -92,12 +112,18 @@ module.exports = {
         }
     },
     
+    /*
+     * Convert fahrenheit to celsius.
+     */
     fahrenheitToCelsius: function(fahrenheit) {
-        return (parseFloat(fahrenheit) - 32) / 1.8;
+        return ((parseFloat(fahrenheit) - 32) / 1.8).toFixed(2);
     }
     
 };
 
-function scalePreserveAspectRatio(imgW,imgH,maxW,maxH) {
-    return (Math.min((maxW/imgW),(maxH/imgH)));
+/*
+ * Calculate the image ratio.
+ */
+function scalePreserveAspectRatio(imgW, imgH, maxW, maxH) {
+    return (Math.min((maxW / imgW), (maxH / imgH)));
 };
