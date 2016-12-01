@@ -63,7 +63,6 @@ $(document).ready(function() {
     });
     
     $('#file-avatar').change(function(e) {
-        window.alert('yeag');
         file = e.target.files[0];
         helper.readURL(file, $('img'), 275, 275, 50, function(hallo) {
             var $validationMessage = $loginDialog.find('.validation-message');
