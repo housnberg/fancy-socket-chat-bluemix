@@ -1,4 +1,5 @@
 const LOCALE = "de-DE";
+const HOURS_IN_MILISECONDS = 3600000; //Yes, this value is supported in javascript
 
 /*
  * ALlows to stream binary data.
@@ -408,9 +409,7 @@ io.on('connection', function(socket) {
             newData.own = true;
             socket.emit('file', newData);
         }
-    });  
-    //NEW
-  
+    });
     
 });
 
@@ -472,6 +471,24 @@ function init() {
         database = cloudant.db.use('fancy-socket-chat');
         if (database === undefined) {
             console.log("ERROR: The database with the name 'fancy-socket-chat' is not defined. You have to define it before you can use the database.")
+        } else {
+            var weatherSelector = {
+                "selector": {
+                    "_id": "supportedWeatherLocations"
+                }  
+            };
+            database.find(weatherSelector, function(error, resultSet) {
+                if (!error) {
+                    supportedWeatherLocations = resultSet.docs[0].cities;
+                }
+            }); 
+            setInterval(function() { 
+                database.find(weatherSelector, function(error, resultSet) {
+                    if (!error) {
+                        supportedWeatherLocations = resultSet.docs[0].cities;
+                    }
+                }); 
+            }, HOURS_IN_MILISECONDS); //Update the supported weather locations every hour
         }
     }
     
@@ -498,27 +515,17 @@ function emitMessage(socket, data) {
  * Return all cities which are available in the message.
  */
 function checkSupportedWeatherLocations(message, callback) {
-    var weatherSelector = {
-        "selector": {
-            "_id": "supportedWeatherLocations"
-        }  
-    };
-    database.find(weatherSelector, function(error, resultSet) {
-        console.log(resultSet);
-        if (!error) {
-            var cities = resultSet.docs[0].cities;
-            var availableCities = new Array();
-            for (var i = 0; i < cities.length; i++) {
-                var index = message.toLocaleLowerCase().indexOf(cities[i].toLocaleLowerCase());
-                if (index != -1) {
-                    availableCities.push(cities[i]);
-                }   
-            }
-            if (availableCities.length == 0) {
-                callback(true);   
-            } else {
-                callback(false, availableCities, index);
-            }
-        }
-    });
+    console.log("SUPPORTED WEATHER:" + supportedWeatherLocations);
+    var availableLocations = new Array();
+    for (var i = 0; i < supportedWeatherLocations.length; i++) {
+        var index = message.toLocaleLowerCase().indexOf(supportedWeatherLocations[i].toLocaleLowerCase());
+        if (index != -1) {
+            availableLocations.push(supportedWeatherLocations[i]);
+        }   
+    }
+    if (availableLocations.length == 0) {
+        callback(true);   
+    } else {
+        callback(false, availableLocations, index);
+    }
 } 
