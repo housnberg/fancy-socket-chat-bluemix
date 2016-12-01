@@ -242,6 +242,9 @@ border-color: #507299 #507299 transparent transparent;
     margin-top: 10px;
 }
 
+.message-wrapper img.weather-data {
+    height: 25px;
+}
 
 /*============================== OWN MESSAGE ==============================*/
 
@@ -266,6 +269,10 @@ border-color: #507299 #507299 transparent transparent;
 }
 
 .message-wrapper.own .avatar-wrapper.small {
+    float: right;
+}
+
+.message-wrapper.own img.weather-data {
     float: right;
 }
 

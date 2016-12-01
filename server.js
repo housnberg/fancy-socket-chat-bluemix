@@ -278,19 +278,23 @@ io.on('connection', function(socket) {
     */
     socket.on('chat message', function(msg) {
         if (isAuthenticated(socket)) {
-            var data = {userName: socket.userName, message: msg, timeStamp: helper.getTimestamp(LOCALE, true), own: false, avatar: socket.avatarPath};
+            var timeStamp = helper.getTimestamp(LOCALE, true);
+            var messageId = socket.userName + " " + timeStamp;
+            var data = {userName: socket.userName, message: msg, timeStamp: timeStamp, own: false, avatar: socket.avatarPath, messageId: messageId};
             //Broadcast message to all users except me.
             checkSupportedWeatherLocations(msg, function(error, cities) {
                 if (!error) {
-                        helper.requestWeather(weatherUrl, cities[0], function(error, weatherData) {
+                    emitMessage(socket, data);
+                    for (var i = 0; i < cities.length; i++) {
+                        helper.requestWeather(weatherUrl, cities[i], function(error, weatherData) {
                            if (!error) {
-                               weatherData.city = cities[0];
-                               data.wertherData = weatherData;
-                               emitMessage(socket, data);
+                               weatherData.messageId = messageId;
+                               io.in(socket.room).emit('weather data', weatherData);   
                            } else {
                                console.log("the city doesnt exist");
                            }
-                        });    
+                        });       
+                    }
                 } else {
                     emitMessage(socket, data);
                 }

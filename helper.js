@@ -70,6 +70,7 @@ module.exports = {
                 request(weatherUrl + '/api/weather/v1/geocode/' + locationData.location.latitude[0] + '/' + locationData.location.longitude[0] + '/forecast/hourly/48hour.json', function (error, response, weatherData) {
                     if (!error && response.statusCode == 200) {
                         weatherData = JSON.parse(weatherData);
+                        weatherData.city = city;
                         callback(false, weatherData);
                     } else {
                          callback(true);

@@ -13836,16 +13836,6 @@ $(document).ready(function() {
         if ($message) {
             if($message === '/users') { //if the message is /users call function to send out the list of current users
                 socket.emit('user list');
-            } else if ($message.startsWith('/weather')) {
-                 socket.emit('weather', $message); 
-            }else if ($message.startsWith('/generatekey')) {
-                var splittedMessage = $message.split(" ");
-                if (splittedMessage[1] !== undefined && splittedMessage[1] != null) {
-                    var key = splittedMessage[1];
-                    if (passwordRegex.test(key)) {
-                        socket.emit('generate key', key); 
-                    }
-                }
             } else if($message.startsWith('@')) {
                 if ($message.split(" ")[1] !== undefined && $message.split(" ")[1] != null) {
                     socket.emit('direct message', $message);   
@@ -14276,30 +14266,22 @@ $(document).ready(function() {
             chatClass += " direct";
         }
         
-        var iconCode = "";
-        var isWeatherData = "";
-        var temp = "";
-        var feelsLike = "";
-        var phrase32char = "";
-        var city = "";
-        if (data.wertherData !== undefined) {
-            var currentForecast = data.wertherData.forecasts[0];
-            iconCode = currentForecast.icon_code;
-            temp = helper.fahrenheitToCelsius(currentForecast.temp);
-            feelsLike = helper.fahrenheitToCelsius(currentForecast.feels_like);
-            phrase32char = currentForecast.phrase_32char;
-            city = data.wertherData.city;
-            
-            isWeatherData = 'is-weather-data=""';
-        }
+        $('#messages').append($('<li class="' + chatClass + '" message-id="' + data.messageId + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').text(data.message).append($('<div class="timestamp">').text(data.userName + " - " + data.timeStamp))));
+    });
+    
+    /*
+     * Submit the weather data and let them appear as a popup.
+     */
+    socket.on('weather data', function(weatherData) {
+        var currentForecast = weatherData.forecasts[0];
+        $('.message-wrapper[message-id="' + weatherData.messageId + '"]:last-child').append($('<img class="weather-data" src="/image/weather_icons/' + currentForecast.icon_code + '.png" icon-code="' + currentForecast.icon_code + '" temp="' + helper.fahrenheitToCelsius(currentForecast.temp) + '" feels-like="' + helper.fahrenheitToCelsius(currentForecast.feels_like) + '" desc="' + currentForecast.phrase_32char + '" city="' + weatherData.city + '">'));
         
-        $('#messages').append($('<li class="' + chatClass + '">').append($('<span class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message" icon-code="' + iconCode + '"' + isWeatherData + ' temp="' + temp + '" feels-like="' + feelsLike + '" desc="' + phrase32char + '" city="' + city + '">').text(data.message).append($('<div>').text(data.userName)).append($('<div class="timestamp">').append($('<i>').text("TEST")).text(data.timeStamp))));
         $(document).tooltip({
-            items: '[is-weather-data]',
+            items: '.weather-data',
             track: true,
             content: function() {
                 var $element = $(this);
-                if ($element.is('[is-weather-data]'))
+                if ($element.is('.weather-data'))
                 return '<ul><li> City: ' + $element.attr('city') + '</li><li> Temperature: ' + $element.attr('temp') + ' °C</li><li> Feels like: ' + $element.attr('feels-like') + ' °C</li><li> Description: ' + $element.attr('desc') + '</li></ul><img class="weater-icon" src="/image/weather_icons/' + $element.attr('icon-code') + '.png">';
             }
         });
@@ -14330,7 +14312,7 @@ $(document).ready(function() {
         if (data.direct) {
             chatClass += " direct";
         }
-        $('#messages').append($('<li class="' + chatClass + '">').append($('<div class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
+        $('#messages').append($('<li class="' + chatClass + '">').append($('<div class="avatar-wrapper small inline-block">').append($('<img src="' + data.avatar + '">'))).append($('<div class="message">').append($('<a href="' + data.filePath + data.fileName + '">').text(data.fileName)).append($('<div class="timestamp">').text(data.userName + " - " + data.timeStamp).append($('<i class="material-icons">').text('attachment')))));
     });
 
     /*
