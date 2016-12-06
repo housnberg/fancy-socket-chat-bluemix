@@ -9,7 +9,7 @@
         <link href="https://fonts.googleapis.com/css?family=PT+Sans:400,400i" rel="stylesheet">
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <script src="/socket.io/socket.io.js"></script>
-        <script src="js/lib/socket.io-stream.js"></script>
+        <!--<script src="js/lib/socket.io-stream.js"></script>-->
         <script src="js/lib/jquery-3.1.1.js"></script>
         <script src="js/lib/jquery-ui.min.js"></script>
         <!-- GENERATED BROWSIFY SCRIPT -->
@@ -21,7 +21,7 @@
             <form>
                 <fieldset>
                     <label for="password">Password</label>
-                    <input type="password" name="password" id="password">
+                    <input type="password" name="password" id="password" autocomplete="off">
                     <input id="room-to-join" type="hidden" value="">
                     <input id="has-password" type="hidden" value="true">
                     <!-- Allow form submission with keyboard without duplicating the dialog button -->
@@ -36,15 +36,16 @@
             <canvas id="canvas" width="275" height="275"></canvas>
         </div>
         <div id="login-dialog" title="Login and Register">
+            <a href="http://www.beyondsecurity.com/vulnerability-scanner-verification/fancy-socket-chat-bluemix.mybluemix.net"><img src="https://seal.beyondsecurity.com/verification-images/fancy-socket-chat-bluemix.mybluemix.net/vulnerability-scanner-2.gif" alt="Website Security Test" border="0" /></a>
             <p class="validation-message"></p>
             <p class="success-message"></p>
             <form id="login-form">
                 <label>Username</label>
                 <input type="text" id="username"/>
                 <label>Password</label>
-                <input type="password" id="password"/>
+                <input type="password" id="password" autocomplete="off"/>
                 <label>Masterkey</label>
-                <input type="password" id="masterkey"/>
+                <input type="password" id="masterkey" autocomplete="off"/>
                 <label>Avatar</label>
                 <div class="avatar-wrapper">
                     <img src="image/default_avatar.png" class="avatar"/>

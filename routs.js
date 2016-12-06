@@ -6,7 +6,7 @@ module.exports = function(io) {
     var config = require('./config.json');
     var express = require('express');
     var router = express.Router();
-
+    
     /*
      * Redirect so https if you call http.
      * This ensures, that the application always uses TLS.

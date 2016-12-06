@@ -11,7 +11,11 @@ var bodyParser = require('body-parser');
 var helper = require('./helper.js');
 
 var express = require('express');
+var helmet = require('helmet');
 var	app = express();
+
+//var redis = require("redis"),
+//var redisClient = redis.createClient(); //Allows
 
 /*
  * options for https-conection
@@ -28,6 +32,11 @@ var	io = require('socket.io').listen(server);
 
 var cfenv = require('cfenv');
 var appEnv = cfenv.getAppEnv();
+
+//var pkg = require("./package.json");
+
+//console.log('#####' + appEnv.app.instance_id);
+//console.log('#####' + appEnv.instance_id);
 
 // Load the Cloudant library.
 var Cloudant = require('cloudant');
@@ -79,6 +88,27 @@ var keySelector = {
 
 init();
 
+app.use(helmet());
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", 'fonts.googleapis.com', 'fonts.gstatic.com'],
+        fontSrc: ["'self'", 'fonts.googleapis.com', 'fonts.gstatic.com'],
+        connectSrc: ["'self'", "ws://" + appEnv.url.replace('https://', '')]
+    },
+    browserSniff: false,
+    setAllHeaders: true
+}));
+app.use(helmet.hsts({
+  maxAge: 604800,
+  force: true,
+    preload: true,
+    fore: true
+}))
+app.use(helmet.referrerPolicy({ 
+    policy: 'same-origin' 
+}));
+app.use(helmet.xssFilter());
 app.enable('trust proxy');
 app.use(bodyParser.json()); // for parsing application/json
 app.use('/', router);
