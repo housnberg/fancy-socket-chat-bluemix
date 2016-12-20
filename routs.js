@@ -42,29 +42,6 @@ module.exports = function(io) {
 
         res.download(path);
     });
-    
-    router.delete('/removeuploadedfiles', function(req, res) {
-        var path = __dirname + "/" + config.filePath;
-        res.status(204);
-        rmdir(path, function (err, dirs, files) {
-            if (err) {
-                res.status(500); 
-                console.error(err);
-            } else {
-                console.log('all files are removed');   
-            }
-        });
-        
-        setTimeout(mkdirp(path, function (err) {
-            if (err) {
-                res.status(500);
-                console.error(err)
-            } else {
-                console.log('directory created');
-            }
-        }), 3000);
-        res.send();
-    });
 
     return router;
 }
